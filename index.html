@@ -3,11 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لعبة إكس أو ضد علي</title>
+  <title>لعبة إكس أو مع علي بشار</title>
+  <!-- Load Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Load Phosphor Icons -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <!-- Load Firebase SDKs -->
   <script type="module">
-    // (Firebase SDKs are kept for the stats feature, replace config later)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, onSnapshot, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -27,150 +29,181 @@
   </script>
 
   <style>
-    /* Tailwind Configuration and Custom Styles */
+    /* Global Styles for Aesthetics and Responsiveness */
     body {
-      background-color: #121212; 
+      background-color: #121212; /* Deep Dark Background */
       color: #e0e0e0;
       font-family: 'Inter', sans-serif;
       min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      transition: background-color 0.3s;
+      padding: 1rem;
     }
 
-    /* General Button Styling */
+    /* Main App Card */
+    #app {
+        background-color: #1e1e1e;
+        border: 1px solid #333;
+    }
+
+    /* Game Button Styling (High Aesthetics) */
     .game-button {
       transition: all 0.2s ease;
-      background-color: #212121; 
-      border: 2px solid #333;
+      background-color: #2a2a2a; 
+      border: 2px solid #00ff73;
       color: #00ff73; 
-      box-shadow: 0 4px #00a04d; 
+      box-shadow: 0 6px #00a04d; /* Increased shadow for depth */
+      font-weight: bold;
     }
 
     .game-button:hover {
       background-color: #333;
-      box-shadow: 0 2px #00a04d;
-      transform: translateY(2px);
+      box-shadow: 0 3px #00a04d;
+      transform: translateY(3px);
     }
     
-    /* Board Cell Styling */
+    /* Board Cell Styling (High Contrast) */
     .cell {
-      background-color: #1e1e1e; 
-      border: 3px solid #333; 
+      background-color: #292929; 
+      border: 3px solid #121212; /* Darker border for separation */
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 4rem;
+      font-size: 4.5rem; /* Slightly larger marker */
       cursor: pointer;
       user-select: none;
-      transition: background-color 0.2s ease;
+      transition: background-color 0.2s ease, transform 0.1s ease;
     }
 
-    /* Custom X and O styles */
+    .cell:hover {
+        background-color: #383838;
+    }
+
+    /* Custom X and O styles (Vivid Colors, High Dikka) */
     .marker-X {
-      color: #00ff73; /* X باللون الأخضر */
+      color: #00ff73; /* Neon Green */
       font-weight: 900;
-      text-shadow: 0 0 10px rgba(0, 255, 115, 0.5);
-      /* لضمان أن X يبدو كحرف وليس كتقاطع */
-      font-style: normal;
+      text-shadow: 0 0 15px rgba(0, 255, 115, 0.7);
+      /* Use a stylized font if possible, but sticking to Noto/Inter for stability */
     }
     
     .marker-O {
-      color: #ff3d00; /* O باللون الأحمر */
+      color: #ff4500; /* Orange Red */
       font-weight: 900;
-      text-shadow: 0 0 10px rgba(255, 61, 0, 0.5);
+      text-shadow: 0 0 15px rgba(255, 69, 0, 0.7);
     }
     
-    /* Toast/Popup Styling */
+    /* Result Toast Styling (Floating Notification) */
     #result-toast {
       position: fixed;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      padding: 1rem 2rem;
+      padding: 1.5rem 3rem;
       border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.9);
       opacity: 0;
-      transition: opacity 0.5s ease-in-out, transform 0.5s ease;
-      z-index: 999;
-      pointer-events: none; /* لمنع منع النقرات */
+      transition: opacity 0.4s ease-in-out;
+      z-index: 9999;
+      pointer-events: none;
+      border: 2px solid;
     }
 
-    /* Game Board Blur for post-game screen */
+    /* Game Board Blur */
     .blur-game {
       filter: blur(5px);
+      pointer-events: none;
       transition: filter 0.5s ease-out;
+    }
+
+    /* Fix for button layout on mobile */
+    .menu-buttons > * {
+        flex-grow: 1; /* Make both buttons grow equally */
     }
 
   </style>
 </head>
 <body class="p-4">
 
+  <!-- Main App Container -->
   <div id="app" class="w-full max-w-sm mx-auto p-6 rounded-2xl shadow-2xl">
     
+    <!-- LOADING SCREEN -->
     <div id="loading-screen" class="flex flex-col items-center justify-center h-80 text-center">
-      <i class="ph ph-circle-notch animate-spin text-4xl text-gray-500"></i>
-      <p class="mt-4 text-gray-400">جاري الاتصال بقاعدة البيانات...</p>
+      <i class="ph ph-circle-notch animate-spin text-4xl text-gray-400"></i>
+      <p class="mt-4 text-gray-400">جاري الاتصال بالنظام...</p>
     </div>
 
+    <!-- MAIN MENU SCREEN -->
     <div id="menu-screen" class="hidden text-center">
-      <h1 class="text-3xl font-bold mb-10 text-white">العب X O مع Ali Bashar</h1>
+      <!-- Requirement 3: Updated Title -->
+      <h1 class="text-3xl font-extrabold mb-10 text-white leading-tight">العب X O مع <span class="marker-X">Ali Bashar</span></h1>
       
-      <div class="flex flex-col space-y-4">
+      <!-- Requirement 1: Fixed Button Layout -->
+      <div class="flex flex-col space-y-4 menu-buttons">
         <button id="start-game-btn" class="game-button w-full px-6 py-4 rounded-xl text-lg font-bold">
-          بدء لعبة <i class="ph ph-sword ml-2"></i>
+          بدء لعبة جديدة <i class="ph ph-sword ml-2"></i>
         </button>
         <button id="account-btn" class="game-button w-full px-6 py-4 rounded-xl text-lg font-bold">
-          حسابي <i class="ph ph-user-circle ml-2"></i>
+          <span class="text-white">رصيد النجوم والإحصائيات</span> <i class="ph ph-star-fill marker-X mr-2"></i>
         </button>
       </div>
     </div>
 
+    <!-- GAME SCREEN -->
     <div id="game-screen" class="hidden">
-      <div id="game-status-bar" class="text-center mb-4 p-2 rounded-lg bg-[#2a2a2a]">
-        <p class="text-lg font-semibold text-accent-green">
+      <div id="game-status-bar" class="text-center mb-4 p-2 rounded-lg bg-[#2a2a2a] border border-[#333]">
+        <!-- Requirement 3: Updated name 'Ali' -->
+        <p class="text-lg font-semibold text-[#e0e0e0]">
           <span id="turn-display">دورك (X)</span>
         </p>
       </div>
       
       <div id="game-board-container" class="relative transition-all duration-500">
-        <div id="game-board" class="grid grid-cols-3 aspect-square max-w-sm mx-auto p-2 bg-[#2a2a2a] rounded-lg">
-          </div>
+        <!-- Game Board -->
+        <div id="game-board" class="grid grid-cols-3 aspect-square max-w-sm mx-auto p-2 bg-[#121212] rounded-lg shadow-inner shadow-black/50">
+          <!-- Cells will be generated by JS -->
+        </div>
 
-        <div id="restart-overlay" class="hidden absolute inset-0 flex flex-col justify-center items-center rounded-lg pointer-events-none">
-          <button id="restart-game-btn" class="game-button px-8 py-4 rounded-xl text-xl font-bold pointer-events-auto">
+        <!-- Restart Overlay: Hidden by default, appears after game ends -->
+        <div id="restart-overlay" class="hidden absolute inset-0 flex flex-col justify-center items-center rounded-lg">
+          <button id="restart-game-btn" class="game-button px-8 py-4 rounded-xl text-xl font-bold">
             إعادة اللعبة
           </button>
         </div>
       </div>
     </div>
 
+    <!-- ACCOUNT SCREEN -->
     <div id="account-screen" class="hidden">
-      <h2 class="text-2xl font-bold mb-6 text-center text-white">معلومات الحساب</h2>
+      <h2 class="text-2xl font-bold mb-6 text-center text-white">رصيد النجوم</h2>
       
-      <div class="bg-[#2a2a2a] p-4 rounded-xl space-y-4">
-        <div class="flex justify-between items-center p-3 bg-[#333] rounded-lg">
-          <span class="text-lg font-semibold">رصيد النجوم:</span>
+      <div class="bg-[#2a2a2a] p-4 rounded-xl space-y-4 border border-[#333]">
+        <!-- Stars Balance -->
+        <div class="flex justify-between items-center p-3 bg-[#333] rounded-lg shadow-inner shadow-black/30">
+          <span class="text-lg font-semibold">رصيدك الحالي:</span>
           <span id="account-stars" class="text-2xl font-bold marker-X flex items-center">
-            0 <i class="ph ph-star-fill text-xl mr-1"></i>
+            0 <i class="ph ph-star-fill text-2xl mr-1"></i>
           </span>
         </div>
 
+        <!-- Stats -->
         <div class="flex justify-between items-center p-3 bg-[#333] rounded-lg">
-          <span class="text-lg font-semibold">عدد الفوز:</span>
+          <span class="text-lg font-semibold">عدد الفوز (ضد Ali):</span>
           <span id="account-wins" class="text-xl font-bold text-[#00ff73]">0</span>
         </div>
         <div class="flex justify-between items-center p-3 bg-[#333] rounded-lg">
           <span class="text-lg font-semibold">عدد الخسارة:</span>
-          <span id="account-losses" class="text-xl font-bold text-[#ff3d00]">0</span>
+          <span id="account-losses" class="text-xl font-bold text-[#ff4500]">0</span>
         </div>
         <div class="flex justify-between items-center p-3 bg-[#333] rounded-lg">
           <span class="text-lg font-semibold">عدد التعادل:</span>
           <span id="account-draws" class="text-xl font-bold text-gray-400">0</span>
         </div>
 
-        <div class="text-sm text-gray-400 pt-2 border-t border-gray-700 space-y-2">
+        <!-- Dates -->
+        <div class="text-sm text-gray-400 pt-4 border-t border-gray-700 space-y-2">
           <p>تاريخ أول لعبة: <span id="account-first-game" class="font-mono">N/A</span></p>
           <p>تاريخ آخر لعبة: <span id="account-last-game" class="font-mono">N/A</span></p>
         </div>
@@ -183,9 +216,10 @@
 
   </div>
 
+  <!-- RESULT TOAST (Floating Notification - Fixed Issue of 'below board') -->
   <div id="result-toast" class="text-center" style="display: none;">
-    <h3 id="toast-title" class="text-xl font-extrabold mb-1"></h3>
-    <p id="toast-message" class="text-sm text-gray-300"></p>
+    <h3 id="toast-title" class="text-2xl font-extrabold mb-1"></h3>
+    <p id="toast-message" class="text-lg text-gray-200"></p>
   </div>
 
 
@@ -241,11 +275,9 @@
       }
     };
 
-    // --- FIREBASE AND STATE MANAGEMENT (Functionality remains the same for stats) ---
+    // --- FIREBASE AND STATE MANAGEMENT ---
 
     async function initializeFirebase() {
-      // (Simplified initialization for demonstration)
-      // In a real environment, replace `firebaseConfig` with your actual config object.
       try {
         const app = initializeApp(firebaseConfig);
         db = getFirestore(app);
@@ -259,29 +291,88 @@
             statsRef = doc(db, `/artifacts/${appId}/users/${userId}/tictactoe/stats`);
             loadStats();
           } else {
+            // Sign in anonymously if no token or user exists
             await signInAnonymously(auth);
           }
         });
 
       } catch (error) {
-        // Fallback for local testing where config is missing
-        console.warn("Firebase failed to initialize. Stats will not be saved.");
+        console.error("Firebase Initialization Error:", error);
+        // Fallback: show menu without persistent stats
         showScreen('menu'); 
       }
     }
 
     function loadStats() {
-      // (Omitted onSnapshot logic for brevity in this reply, but it's in the code)
-      // Assume stats are loaded and show menu
-      showScreen('menu'); 
+      onSnapshot(statsRef, (docSnap) => {
+        if (docSnap.exists()) {
+          userStats = docSnap.data();
+        } else {
+          // Initialize if no document exists
+          userStats = {
+            stars: 0, wins: 0, losses: 0, draws: 0, firstGameDate: 'N/A', lastGameDate: 'N/A'
+          };
+        }
+        updateAccountScreen();
+        showScreen('menu'); // Show menu after loading stats
+      }, (error) => {
+        console.error("Firestore Snapshot Error:", error);
+        showScreen('menu'); 
+      });
     }
 
     async function updateStats(result) {
-      // (Omitted updateStats logic for brevity in this reply, but it's in the code)
+      const now = new Date().toISOString();
+      const isNewUser = userStats.firstGameDate === 'N/A';
+      
+      let starsChange = 0;
+      if (result === 'X') { // User Win: +1 Star
+        starsChange = 1;
+        userStats.wins++;
+      } else if (result === 'O') { // Ali Win: -1 Star
+        starsChange = -1;
+        userStats.losses++;
+      } else { // Draw: 0 Change
+        userStats.draws++;
+      }
+
+      userStats.stars = (userStats.stars || 0) + starsChange;
+      userStats.lastGameDate = now;
+      if (isNewUser) {
+        userStats.firstGameDate = now;
+      }
+
+      try {
+        if (isNewUser) {
+          await setDoc(statsRef, userStats);
+        } else {
+          await updateDoc(statsRef, userStats);
+        }
+        updateAccountScreen();
+      } catch (e) {
+        console.error("Error updating stats:", e);
+      }
     }
 
     function updateAccountScreen() {
-      // (Omitted updateAccountScreen logic for brevity in this reply, but it's in the code)
+      const starsEl = document.getElementById('account-stars');
+      starsEl.innerHTML = `${userStats.stars} <i class="ph ph-star-fill text-2xl mr-1"></i>`;
+      
+      // Update color based on balance
+      starsEl.classList.remove('marker-X', 'marker-O', 'text-gray-400');
+      if (userStats.stars > 0) {
+        starsEl.classList.add('marker-X');
+      } else if (userStats.stars < 0) {
+        starsEl.classList.add('marker-O');
+      } else {
+        starsEl.classList.add('text-gray-400');
+      }
+      
+      document.getElementById('account-wins').textContent = userStats.wins;
+      document.getElementById('account-losses').textContent = userStats.losses;
+      document.getElementById('account-draws').textContent = userStats.draws;
+      document.getElementById('account-first-game').textContent = formatDate(userStats.firstGameDate);
+      document.getElementById('account-last-game').textContent = formatDate(userStats.lastGameDate);
     }
 
     function showScreen(screenName) {
@@ -292,10 +383,11 @@
       if (screenName !== 'game') {
         isGameActive = false;
         gameBoardContainer.classList.remove('blur-game');
+        restartOverlay.classList.add('hidden');
       }
     }
 
-    // --- GAME LOGIC (Minimax is unchanged, only UI flow is updated) ---
+    // --- GAME LOGIC ---
 
     const winningConditions = [
       [0, 1, 2], [3, 4, 5], [6, 7, 8], 
@@ -304,7 +396,6 @@
     ];
 
     function checkWin(currentBoard) {
-      // (Unchanged logic for checking win/draw)
       for (let i = 0; i < winningConditions.length; i++) {
         const [a, b, c] = winningConditions[i];
         if (currentBoard[a] && currentBoard[a] === currentBoard[b] && currentBoard[a] === currentBoard[c]) {
@@ -320,39 +411,79 @@
     function handleMove(clickedCellIndex) {
       if (!isGameActive || board[clickedCellIndex] !== '' || isGameOver) return;
 
-      // 1. User Move (X)
+      // User Move (X)
       board[clickedCellIndex] = 'X';
       document.getElementById(`cell-${clickedCellIndex}`).innerHTML = `<span class="marker-X">X</span>`;
       
       let result = checkWin(board);
-      if (result) return gameEnd(result);
+      if (result) return gameEnd(result); // Game end immediately after user's winning move
       
       currentPlayer = 'O';
       turnDisplay.textContent = 'دور Ali (O)';
-      isGameActive = false; 
+      isGameActive = false; // Pause for AI
       
-      // 2. Ali's move after a short delay
+      // Ali's move after a short delay
       setTimeout(robotMove, 700);
     }
 
-    function minimax(newBoard, player) {
-      // (Minimax logic is unchanged)
-      // ... (Minimax implementation is long and omitted here, but is present in the full code)
-      const availSpots = newBoard.map((val, i) => val === '' ? i : -1).filter(i => i !== -1);
-      
-      if (checkWin(newBoard) === 'X') return { score: -10 };
-      if (checkWin(newBoard) === 'O') return { score: 10 };
-      if (availSpots.length === 0) return { score: 0 };
-      
-      const moves = [];
-      // (full Minimax loop is here)
-      
-      let bestMove;
-      // (Move selection logic is here)
-      
-      return moves[0] || {}; // Simple return for demo
-    }
+    // --- SMART AI (Minimax Algorithm) ---
+    
+    // Evaluate the board state
+    const scores = {
+      X: -10, // User win is bad for Ali
+      O: 10,  // Ali win is good
+      Draw: 0
+    };
 
+    function minimax(newBoard, player) {
+      const result = checkWin(newBoard);
+      if (result) {
+        return { score: scores[result] };
+      }
+
+      const availSpots = newBoard.map((val, i) => val === '' ? i : -1).filter(i => i !== -1);
+      const moves = [];
+
+      for (let i = 0; i < availSpots.length; i++) {
+        const move = {};
+        const index = availSpots[i];
+        move.index = index;
+        newBoard[index] = player;
+
+        if (player === 'O') { // Ali (Maximizer)
+          const score = minimax(newBoard, 'X').score;
+          move.score = score;
+        } else { // User (Minimizer)
+          const score = minimax(newBoard, 'O').score;
+          move.score = score;
+        }
+
+        newBoard[index] = ''; // Reset the spot
+        moves.push(move);
+      }
+
+      // Find the best move
+      let bestMove = 0;
+      if (player === 'O') {
+        let bestScore = -Infinity;
+        for (let i = 0; i < moves.length; i++) {
+          if (moves[i].score > bestScore) {
+            bestScore = moves[i].score;
+            bestMove = i;
+          }
+        }
+      } else {
+        let bestScore = Infinity;
+        for (let i = 0; i < moves.length; i++) {
+          if (moves[i].score < bestScore) {
+            bestScore = moves[i].score;
+            bestMove = i;
+          }
+        }
+      }
+
+      return moves[bestMove];
+    }
 
     function robotMove() {
       const availSpots = board.map((val, i) => val === '' ? i : -1).filter(i => i !== -1);
@@ -360,72 +491,74 @@
       if (availSpots.length === 0) return gameEnd('Draw');
 
       // Use Minimax to find the best spot
-      const bestSpot = availSpots[Math.floor(Math.random() * availSpots.length)]; // Simplified for reply, Minimax in full code
+      const bestSpot = minimax(board, 'O').index;
 
-      // 3. Ali Move (O)
+      // Ali Move (O)
       board[bestSpot] = 'O';
+      // Apply the visual mark immediately
       document.getElementById(`cell-${bestSpot}`).innerHTML = `<span class="marker-O">O</span>`;
 
       let result = checkWin(board);
-      if (result) return gameEnd(result);
+      if (result) return gameEnd(result); // Game end immediately after Ali's winning move
 
       currentPlayer = 'X';
       turnDisplay.textContent = 'دورك (X)';
       isGameActive = true;
     }
     
-    // --- GAME END FLOW (The main fix) ---
+    // --- GAME END FLOW (Fixed Timing and Appearance) ---
 
     function gameEnd(winner) {
       isGameActive = false;
       isGameOver = true;
-      let title, message, bgColor;
+      let title, message, bgColor, borderColor;
       
       if (winner === 'X') {
         title = "تهانينا! 🎉";
         message = "تمت إضافة 1 نجمة لرصيدك.";
-        bgColor = '#006400'; // Dark Green
+        bgColor = '#006400'; 
+        borderColor = '#00ff73';
         updateStats('X');
       } else if (winner === 'O') {
         title = "خسرت! 😞";
         message = "تم خصم 1 نجمة من رصيدك.";
-        bgColor = '#8b0000'; // Dark Red
+        bgColor = '#8b0000'; 
+        borderColor = '#ff4500';
         updateStats('O');
       } else {
         title = "تعادل 🤝";
         message = "انتهت اللعبة بالتعادل.";
-        bgColor = '#333333'; // Dark Gray
+        bgColor = '#333333'; 
+        borderColor = '#e0e0e0';
         updateStats('Draw');
       }
       
-      // 1. Show the result Toast
+      // 1. Prepare and Show the result Toast
       toastTitle.textContent = title;
       toastMessage.textContent = message;
       resultToast.style.backgroundColor = bgColor;
+      resultToast.style.borderColor = borderColor;
       resultToast.style.display = 'block'; 
       
-      // Force repaint before starting fade in
-      void resultToast.offsetWidth; 
-      
-      // Fade in
-      resultToast.style.opacity = 1;
-      
-      // 2. Start blur after a small delay (0.5s)
+      // Delay before starting the smooth fade and blur
       setTimeout(() => {
+        // Fade in (0.4s)
+        resultToast.style.opacity = 1;
+        // Start smooth blur (0.5s)
         gameBoardContainer.classList.add('blur-game');
-      }, 500);
+      }, 50); // Small initial delay
 
-      // 3. Fade out after 1.2 seconds from appearance
+      // 2. Fade out after 1.2 seconds of full visibility
       setTimeout(() => {
         resultToast.style.opacity = 0;
-      }, 1200);
+      }, 50 + 1200);
 
-      // 4. Show restart button after the toast fades out completely (1.2s + 0.5s transition time)
+      // 3. Hide toast and show restart button after fade transition (1.2s + 0.4s transition)
       setTimeout(() => {
         resultToast.style.display = 'none';
-        // Now show the restart button over the blurred board
+        // Show the restart button
         restartOverlay.classList.remove('hidden');
-      }, 1700); 
+      }, 50 + 1200 + 400); 
     }
     
     // --- INITIALIZATION ---
@@ -481,3 +614,4 @@
   </script>
 </body>
 </html>
+
