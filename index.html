@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>الواجهة المصغّرة</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      background: #101010;
+      color: #fff;
+      font-family: sans-serif;
+      text-align: center;
+      padding-top: 60px;
+    }
+    button {
+      background: #0088cc;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 18px;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h2>👋 مرحباً بك في واجهة البوت</h2>
+  <p>جرب إرسال رسالة للبوت من هنا:</p>
+
+  <button onclick="sendData()">📤 إرسال بيانات</button>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand(); // يخلي الصفحة تاخذ كامل مساحة الواجهة
+
+    function sendData() {
+      tg.sendData("مرحبا من الواجهة المصغّرة ✅");
+    }
+  </script>
+</body>
+                                               </html>
+                                              
