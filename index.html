@@ -3,35 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لعبة إكس أو مع علي بشار - النسخة الفاخرة</title>
+  <title>لعبة إكس أو مع علي بشار</title>
   <!-- Load Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Load Phosphor Icons -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
-  
-  <!-- Tailwind Configuration for Blur Utility -->
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            'neon-green': '#00ff73',
-            'neon-red': '#ff4500',
-            'dark-bg': '#0f0f0f',
-            'dark-card': 'rgba(15, 15, 15, 0.95)',
-          }
-        }
-      }
-    }
-  </script>
-  
   <!-- Load Firebase SDKs -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, browserLocalPersistence, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, onSnapshot, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     
-    // Export Firebase functions to the global window object for use in the main script block
     window.initializeApp = initializeApp;
     window.getAuth = getAuth;
     window.signInAnonymously = signInAnonymously;
@@ -43,26 +25,24 @@
     window.updateDoc = updateDoc;
     window.setPersistence = setPersistence;
     window.browserLocalPersistence = browserLocalPersistence;
-    window.signInWithCustomToken = signInWithCustomToken;
+    window.signInWithCustomToken = signInWithCustomToken; // Ensure custom token sign-in is available
   </script>
 
   <style>
-    /* ---------------------------------------------------------------------- */
-    /* --- 1. BASE STYLES & BACKGROUND --- */
-    /* ---------------------------------------------------------------------- */
+    /* Global Styles for Aesthetics and Responsiveness */
     body {
       color: #e0e0e0;
       font-family: 'Tahoma', 'Inter', sans-serif; 
-      min-height: 100vh; /* Full viewport height for centering */
+      min-height: 10vh; /* Changed to 10vh for better mobile fit */
       display: flex;
       justify-content: center;
       align-items: center;
       padding: 1rem;
       background-color: #000;
       position: relative;
-      overflow-y: auto; /* Allow scrolling if content overflows */
     }
 
+    /* --- VIDEO BACKGROUND & OVERLAY --- */
     #video-background {
       position: fixed;
       top: 0;
@@ -83,50 +63,45 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      background-color: rgba(0, 0, 0, 0.6); 
+      background-color: rgba(0, 0, 0, 0.5); 
       z-index: -1; 
     }
 
-    /* Main App Card - Responsive and Aesthetic */
+    /* Main App Card */
     #app {
-        background-color: var(--dark-card); 
-        border: 2px solid #333;
+        background-color: rgba(15, 15, 15, 0.95); 
+        border: 1px solid #333;
         position: relative;
         z-index: 10;
-        min-height: 80vh; 
-        max-width: 420px; /* Slightly wider for better look */
-        width: 100%;
+        /* Ensure app card uses full screen height available */
         display: flex;
         flex-direction: column;
-        justify-content: center;
+        min-height: 90vh; 
+        justify-content: center; 
     }
-
-    /* ---------------------------------------------------------------------- */
-    /* --- 2. GAME ELEMENTS STYLES --- */
-    /* ---------------------------------------------------------------------- */
 
     /* Game Button Styling (High Aesthetics) */
     .game-button {
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.2s ease;
       background-color: #2a2a2a; 
-      border: 2px solid var(--neon-green);
-      color: var(--neon-green); 
-      box-shadow: 0 5px #008040; /* Deeper shadow */
+      border: 2px solid #00ff73;
+      color: #00ff73; 
+      box-shadow: 0 4px #00a04d; 
       font-weight: bold;
     }
 
     .game-button:hover {
       background-color: #333;
-      box-shadow: 0 2px #008040;
-      transform: translateY(3px); /* Stronger press effect */
+      box-shadow: 0 2px #00a04d;
+      transform: translateY(2px);
     }
     
-    /* Board Cell Styling - 3D/Neumorphism-like */
+    /* Board Cell Styling */
     .cell {
       background-color: #1c1c1c; 
       border: none;
-      box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.8), /* Darker inner shadow */
-                  inset -3px -3px 5px rgba(60, 60, 60, 0.3); /* Lighter inner highlight */
+      box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.7), 
+                  inset -2px -2px 5px rgba(60, 60, 60, 0.2);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -141,37 +116,28 @@
 
     .cell:hover {
         background-color: #252525;
-        transform: scale(0.98); /* Subtle hover press */
     }
-    
+
     /* Custom X and O styles (Vivid Colors) */
     .marker-X, .marker-O {
-      font-size: 3.5rem; /* Slightly larger */
+      font-size: 3rem; 
       line-height: 1; 
       font-weight: 900;
       user-select: none;
+      /* لضمان بقاء الحجم ثابتًا وعدم تأثره بالـ line-height للغة العربية */
       display: inline-block; 
-      transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); /* Bounce animation */
+      transform: translateY(2px); /* تعديل بسيط لمركزة الرمز عمودياً */
     }
     
     .marker-X {
-      color: var(--neon-green); 
-      text-shadow: 0 0 15px rgba(0, 255, 115, 0.8);
+      color: #00ff73; 
+      text-shadow: 0 0 10px rgba(0, 255, 115, 0.7);
     }
     
     .marker-O {
-      color: var(--neon-red); 
-      text-shadow: 0 0 15px rgba(255, 69, 0, 0.8);
+      color: #ff4500; 
+      text-shadow: 0 0 10px rgba(255, 69, 0, 0.7);
     }
-    
-    .cell:not(:empty) .marker-X,
-    .cell:not(:empty) .marker-O {
-        transform: scale(1.0); /* Animation end state */
-    }
-    
-    /* ---------------------------------------------------------------------- */
-    /* --- 3. OVERLAYS, TOAST & WINNING LINE --- */
-    /* ---------------------------------------------------------------------- */
     
     /* Result Toast Styling */
     #result-toast {
@@ -179,17 +145,17 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      padding: 2rem 4rem; /* Larger padding */
-      border-radius: 16px;
-      box-shadow: 0 0 40px rgba(0, 0, 0, 0.9);
+      padding: 1.5rem 3rem;
+      border-radius: 12px;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.9);
       opacity: 0;
       transition: opacity 0.2s ease-in-out; 
       z-index: 9999;
       pointer-events: none;
-      border: 3px solid;
+      border: 2px solid;
     }
 
-    /* Restart Overlay Styling (Covers the board) */
+    /* Restart Overlay Styling - RE-ADDED */
     #restart-overlay {
         position: absolute;
         inset: 0;
@@ -197,65 +163,62 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        background-color: rgba(0, 0, 0, 0.8); /* Darker backdrop */
+        background-color: rgba(0, 0, 0, 0.7); 
         border-radius: 12px;
         z-index: 20; 
         opacity: 0;
         transition: opacity 0.3s ease-in-out;
-        /* CRITICAL FIX: Ensure clicks pass through when hidden */
-        pointer-events: none; 
-    }
-    #restart-overlay.visible {
-        opacity: 1;
-        pointer-events: all;
     }
 
-    /* Blur Effect Utility Class */
-    .blur-target {
-        filter: blur(5px);
-        opacity: 0.5;
-        pointer-events: none;
-        transition: filter 0.5s ease, opacity 0.5s ease;
+    /* Game Board Grid */
+    #game-board {
+        gap: 12px; 
+        position: relative; 
+        z-index: 10;
+        padding: 10px;
+        width: 100%; 
+        max-width: 380px; 
     }
     
-    /* Winning Line */
+    /* WINNING LINE STYLES */
+    #winning-line {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        z-index: 15; 
+    }
+    .win-line {
+        position: absolute;
+        border-radius: 5px;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+        box-shadow: 0 0 15px currentColor;
+    }
     .win-line-active {
+        opacity: 1;
         animation: neon-pulse 1s ease-in-out infinite alternate;
     }
+    
     @keyframes neon-pulse {
-        from { opacity: 0.7; transform: scale(1.0); }
-        to { opacity: 1.0; transform: scale(1.05); }
+        from { opacity: 0.6; }
+        to { opacity: 1; }
     }
     
-    /* ---------------------------------------------------------------------- */
-    /* --- 4. UTILITY & RESPONSIVENESS --- */
-    /* ---------------------------------------------------------------------- */
-    
-    /* Audio Controls Position */
-    #audio-controls {
-        position: absolute;
-        top: 4rem; /* Adjusted for better spacing below lang button */
-        right: 1rem;
-        z-index: 20;
-    }
-    /* Language Button Position */
-    #lang-switch-btn {
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-        z-index: 20;
-    }
-
-    /* Menu Title Fix for Arabic Wrapping */
+    /* --- FIX: TITLE WRAPPING ISSUE V3 (More Aggressive Fix) --- */
     .menu-title-fix {
-        font-size: 2.5rem; 
+        font-size: 2rem; /* حجم الخط القياسي */
         line-height: 1.2;
     }
-    @media (max-width: 400px) { 
+    /* تصغير إجباري إضافي على الشاشات الصغيرة جداً لضمان عدم الالتفاف */
+    @media (max-width: 350px) { 
         .menu-title-fix {
-            font-size: 1.8rem; 
+            font-size: 1.2rem; /* تقليل الحجم لضمان سطر واحد */
         }
     }
+
   </style>
 </head>
 <body class="p-4">
@@ -267,28 +230,13 @@
   <div id="video-overlay"></div>
   <!-- ------------------------ -->
 
-  <!-- --- AUDIO ELEMENT (For Music) --- -->
-  <!-- 
-    NOTE: Updated music file path to: Гио Пика - Буйно голова.m4a 
-    User needs to ensure this path is correct in their repository. 
-  -->
-  <audio id="background-music" loop preload="auto">
-      <source src="Гио Пика - Буйно голова.m4a" type="audio/m4a">
-      <span data-ar="المتصفح لا يدعم تشغيل هذا الصوت." data-en="Your browser does not support this audio."></span>
-  </audio>
-
-  <!-- --- AUDIO CONTROLS (Top Right) --- -->
-  <button id="audio-controls" class="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-full text-sm shadow-md transition-colors duration-200 z-20">
-    <i id="audio-icon" class="ph ph-speaker-simple-high text-xl"></i>
-  </button>
-
-  <!-- --- LANGUAGE SWITCHER (Top Left) --- -->
-  <button id="lang-switch-btn" data-lang="ar" class="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-full text-sm shadow-md transition-colors duration-200 z-20">
+  <!-- Language Switcher (Top Left) -->
+  <button id="lang-switch-btn" data-lang="ar" class="absolute top-4 left-4 bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-full text-sm shadow-md transition-colors duration-200 z-20">
     <span id="lang-flag">🇮🇶</span> <span id="lang-text">العربية</span>
   </button>
 
   <!-- Main App Container -->
-  <div id="app" class="mx-auto p-8 rounded-2xl shadow-2xl relative">
+  <div id="app" class="w-full max-w-sm mx-auto p-6 rounded-2xl shadow-2xl relative">
     
     <!-- LOADING SCREEN -->
     <div id="loading-screen" class="flex flex-col items-center justify-center h-80 text-center">
@@ -298,17 +246,18 @@
 
     <!-- MAIN MENU SCREEN -->
     <div id="menu-screen" class="hidden text-center">
+      <!-- FIX: تم دمج النص بالكامل في عنصر واحد وضبطه لعدم الالتفاف -->
       <h1 class="font-extrabold mb-10 text-white leading-tight menu-title-fix">
         <span data-ar="العب X O مع علي بشار" data-en="Play X O, With Ali Bashar" class="inline-block whitespace-nowrap">
           <span data-ar="العب X O مع" data-en="Play X O, With">العب X O مع</span> <span class="marker-X inline-block">علي بشار</span>
         </span>
       </h1>
       
-      <div class="flex flex-col space-y-5 menu-buttons">
+      <div class="flex flex-col space-y-4 menu-buttons">
         <button id="start-game-btn" class="game-button w-full px-6 py-4 rounded-xl text-lg font-bold">
           <span data-ar="بدء لعبة جديدة" data-en="Start New Game">بدء لعبة جديدة</span> <i class="ph ph-sword ml-2"></i>
         </button>
-        <button id="account-btn" class="game-button w-full px-6 py-4 rounded-xl text-lg font-bold bg-gray-600 border-gray-500 text-white" style="box-shadow: 0 4px #444; border-color: #555;">
+        <button id="account-btn" class="game-button w-full px-6 py-4 rounded-xl text-lg font-bold">
           <span class="text-white" data-ar="رصيد النجوم والإحصائيات" data-en="Star Balance & Stats">رصيد النجوم والإحصائيات</span> <i class="ph ph-star-fill marker-X mr-2"></i>
         </button>
       </div>
@@ -316,28 +265,28 @@
 
     <!-- GAME SCREEN -->
     <div id="game-screen" class="hidden relative">
-      <div id="game-status-bar" class="text-center mb-6 p-3 rounded-xl bg-[#2a2a2a] border border-[#333] transition-all duration-500">
-        <p class="text-xl font-bold text-[#e0e0e0]">
+      <div id="game-status-bar" class="text-center mb-4 p-2 rounded-xl bg-[#2a2a2a] border border-[#333] transition-all duration-500">
+        <p class="text-lg font-semibold text-[#e0e0e0]">
           <span id="turn-display"></span>
         </p>
       </div>
       
       <div id="game-board-container" class="relative transition-all duration-500">
         <!-- Game Board -->
-        <div id="game-board" class="grid grid-cols-3 gap-3 aspect-square max-w-sm mx-auto transition-all duration-500">
-          <!-- Winning Line Container (Generated by JS) -->
-          <div id="winning-line" class="absolute inset-0 pointer-events-none"></div>
+        <div id="game-board" class="grid grid-cols-3 aspect-square max-w-sm mx-auto transition-all duration-500">
+          <!-- Winning Line Container -->
+          <div id="winning-line" class="absolute inset-0"></div>
           <!-- Cells will be generated by JS -->
         </div>
         
-        <!-- RESTART OVERLAY - Initially hidden, becomes visible after game end -->
+        <!-- RESTART OVERLAY - RE-ADDED -->
         <div id="restart-overlay" class="hidden">
              <!-- The buttons will appear here -->
         </div>
       </div>
       
       <!-- GAME CONTROL BUTTONS - now only holds the End Game button when game is active -->
-      <div id="game-control-buttons" class="mt-8 space-y-3 transition-all duration-500">
+      <div id="game-control-buttons" class="mt-6 space-y-3 transition-all duration-500">
           <!-- 1. زر إنهاء اللعبة (End Game) -->
           <button id="end-game-btn" class="game-button w-full px-6 py-3 rounded-xl text-lg font-bold bg-gray-600 border-gray-500 text-white" style="box-shadow: 0 4px #444; border-color: #555;">
               <span data-ar="إنهاء اللعبة والعودة للقائمة" data-en="End Game and Return to Menu">إنهاء اللعبة والعودة للقائمة</span>
@@ -348,34 +297,27 @@
 
     <!-- ACCOUNT SCREEN -->
     <div id="account-screen" class="hidden">
-      <h2 class="text-3xl font-bold mb-8 text-center text-white" data-ar="رصيد النجوم" data-en="Star Balance">رصيد النجوم</h2>
+      <h2 class="text-2xl font-bold mb-6 text-center text-white" data-ar="رصيد النجوم" data-en="Star Balance">رصيد النجوم</h2>
       
-      <div class="bg-[#2a2a2a] p-5 rounded-2xl space-y-5 border border-[#444] shadow-xl">
-        <!-- User ID Display - Mandatory for collaborative apps -->
-        <div class="p-3 bg-gray-700/50 rounded-lg text-sm font-mono break-all" data-ar="معرف المستخدم (للمشاركة):" data-en="User ID (for sharing):">
-            <span id="user-id-display">Loading...</span>
-        </div>
-        
+      <div class="bg-[#2a2a2a] p-4 rounded-xl space-y-4 border border-[#333]">
         <!-- Stars Balance -->
         <div class="flex justify-between items-center p-3 bg-[#333] rounded-lg shadow-inner shadow-black/30">
-          <span class="text-xl font-semibold" data-ar="رصيدك الحالي:" data-en="Current Balance:">رصيدك الحالي:</span>
-          <span id="account-stars" class="text-3xl font-bold marker-X flex items-center">0 <i class="ph ph-star-fill text-3xl mr-1"></i></span>
+          <span class="text-lg font-semibold" data-ar="رصيدك الحالي:" data-en="Current Balance:">رصيدك الحالي:</span>
+          <span id="account-stars" class="text-2xl font-bold marker-X flex items-center">0 <i class="ph ph-star-fill text-2xl mr-1"></i></span>
         </div>
 
-        <!-- Stats Grid -->
-        <div class="grid grid-cols-3 gap-4 text-center pt-4 border-t border-gray-700">
-            <div>
-                <span id="account-wins" class="text-2xl font-bold text-neon-green">0</span>
-                <p class="text-sm text-gray-400" data-ar="فوز" data-en="Wins">فوز</p>
-            </div>
-            <div>
-                <span id="account-losses" class="text-2xl font-bold text-neon-red">0</span>
-                <p class="text-sm text-gray-400" data-ar="خسارة" data-en="Losses">خسارة</p>
-            </div>
-            <div>
-                <span id="account-draws" class="text-2xl font-bold text-gray-400">0</span>
-                <p class="text-sm text-gray-400" data-ar="تعادل" data-en="Draws">تعادل</p>
-            </div>
+        <!-- Stats -->
+        <div class="flex justify-between items-center p-3 bg-[#333] rounded-lg">
+          <span class="text-lg font-semibold" data-ar="عدد الفوز (ضد علي بشار):" data-en="Wins (vs Ali Bashar):">عدد الفوز (ضد علي بشار):</span>
+          <span id="account-wins" class="text-xl font-bold text-[#00ff73]">0</span>
+        </div>
+        <div class="flex justify-between items-center p-3 bg-[#333] rounded-lg">
+          <span class="text-lg font-semibold" data-ar="عدد الخسارة:" data-en="Losses:">عدد الخسارة:</span>
+          <span id="account-losses" class="text-xl font-bold text-[#ff4500]">0</span>
+        </div>
+        <div class="flex justify-between items-center p-3 bg-[#333] rounded-lg">
+          <span class="text-lg font-semibold" data-ar="عدد التعادل:" data-en="Draws:">عدد التعادل:</span>
+          <span id="account-draws" class="text-xl font-bold text-gray-400">0</span>
         </div>
 
         <!-- Dates -->
@@ -385,8 +327,8 @@
         </div>
       </div>
       
-      <button id="back-to-menu-btn" class="game-button w-full mt-8 px-6 py-4 rounded-xl text-lg font-bold">
-        <span data-ar="العودة للقائمة الرئيسية" data-en="Back to Main Menu">العودة للقائمة الرئيسية</span> <i class="ph ph-arrow-counter-clockwise ml-2"></i>
+      <button id="back-to-menu-btn" class="game-button w-full mt-6 px-6 py-3 rounded-xl text-lg font-bold">
+        <span data-ar="العودة للقائمة الرئيسية" data-en="Back to Main Menu">العودة للقائمة الرئيسية</span>
       </button>
     </div>
 
@@ -394,43 +336,28 @@
 
   <!-- RESULT TOAST (Floating Notification) -->
   <div id="result-toast" class="text-center" style="display: none;">
-    <h3 id="toast-title" class="text-3xl font-bold mb-2"></h3>
-    <p id="toast-message" class="text-xl text-gray-200"></p>
+    <h3 id="toast-title" class="text-2xl font-bold mb-1"></h3>
+    <p id="toast-message" class="text-lg text-gray-200"></p>
   </div>
 
 
   <script type="module">
-    /**
-     * @file tictactoe_v7.html
-     * @author Ali Bashar - Gemini
-     * @description Tic-Tac-Toe Game (X vs O AI) with luxurious structure,
-     * Firebase persistence, language switching, and background music control.
-     * Features included: Minimax AI, responsive design, and robust state management.
-     */
-
-    // ----------------------------------------------------------------------
-    // --- 1. GLOBAL CONSTANTS & CONFIGURATION ---
-    // ----------------------------------------------------------------------
-
-    const WIN_COLOR = '#00ff73'; // Neon Green for User (X)
-    const LOSE_COLOR = '#ff4500'; // Orange Red for Ali (O)
-    const TOAST_VISIBLE_DURATION_MS = 1500; 
-
-    // Localization Data
+    // --- Localization Data ---
     const i18n = {
         ar: {
             loading: "جاري الاتصال بالنظام...",
             title: "العب X O مع علي بشار", 
             start: "بدء لعبة جديدة",
             stats: "رصيد النجوم والإحصائيات",
-            user_id: "معرف المستخدم (للمشاركة):",
             current_balance: "رصيدك الحالي:",
-            wins: "فوز", losses: "خسارة", draws: "تعادل",
+            wins: "عدد الفوز (ضد علي بشار):",
+            losses: "عدد الخسارة:",
+            draws: "عدد التعادل:",
             first_game: "تاريخ أول لعبة:",
             last_game: "تاريخ آخر لعبة:",
             back_to_menu: "العودة للقائمة الرئيسية",
-            end_game_menu: "العودة للقائمة",
-            end_game: "إنهاء اللعبة والعودة للقائمة",
+            end_game_menu: "العودة للقائمة", // New, for the overlay button
+            end_game: "إنهاء اللعبة والعودة للقائمة", // Main button text
             restart_game: "إعادة اللعبة", 
             turn_you: "دورك (X)",
             turn_ali: "دور علي بشار (O)",
@@ -447,14 +374,15 @@
             title: "Play X O, With Ali Bashar", 
             start: "Start New Game",
             stats: "Star Balance & Stats",
-            user_id: "User ID (for sharing):",
             current_balance: "Current Balance:",
-            wins: "Wins", losses: "Losses", draws: "Draws",
+            wins: "Wins (vs Ali Bashar):",
+            losses: "Losses:",
+            draws: "Draws:",
             first_game: "First Game:",
             last_game: "Last Game:",
             back_to_menu: "Back to Main Menu",
-            end_game_menu: "Back to Menu",
-            end_game: "End Game and Return to Menu",
+            end_game_menu: "Back to Menu", // New, for the overlay button
+            end_game: "End Game and Return to Menu", // Main button text
             restart_game: "Restart Game", 
             turn_you: "Your turn (X)",
             turn_ali: "Ali Bashar's turn (O)",
@@ -468,814 +396,595 @@
         }
     };
     
-    // --- Global App State Management ---
-    const AppState = {
-        // Firebase Config
-        appId: typeof __app_id !== 'undefined' ? __app_id : 'default-app-id',
-        firebaseConfig: JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}'),
-        db: null,
-        auth: null,
-        userId: null,
-        statsRef: null,
-        isAuthReady: false,
-        
-        // Game State
-        board: Array(9).fill(''),
-        currentPlayer: 'X', // User always starts as 'X'
-        isGameActive: false,
-        isGameOver: false,
-        
-        // UI State
-        currentLang: localStorage.getItem('appLang') || 'ar', 
-        isMusicPlaying: false,
-        isMusicMuted: false,
+    // Global Firebase and State Variables
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+    let db, auth, userId;
+    let statsRef;
+    let currentLang = localStorage.getItem('appLang') || 'ar'; 
 
-        // User Data State
-        userStats: {
-            stars: 0, wins: 0, losses: 0, draws: 0, 
-            firstGameDate: 'N/A', lastGameDate: 'N/A'
-        }
+    // Game State
+    let board = ['', '', '', '', ['', '', '', '', ''], '', '', ''];
+    let currentPlayer = 'X'; // User starts first
+    let isGameActive = false;
+    let isGameOver = false;
+
+    // User Data State
+    let userStats = {
+      stars: 0,
+      wins: 0,
+      losses: 0,
+      draws: 0,
+      firstGameDate: 'N/A',
+      lastGameDate: 'N/A'
     };
 
-    // ----------------------------------------------------------------------
-    // --- 2. DOM ELEMENT CACHE ---
-    // ----------------------------------------------------------------------
-    const DOM = {
-        screens: {
-            loading: document.getElementById('loading-screen'),
-            menu: document.getElementById('menu-screen'),
-            game: document.getElementById('game-screen'),
-            account: document.getElementById('account-screen')
-        },
-        game: {
-            board: document.getElementById('game-board'),
-            boardContainer: document.getElementById('game-board-container'),
-            turnDisplay: document.getElementById('turn-display'),
-            restartOverlay: document.getElementById('restart-overlay'),
-            controlButtons: document.getElementById('game-control-buttons'),
-            statusBar: document.getElementById('game-status-bar'),
-            winningLine: document.getElementById('winning-line')
-        },
-        account: {
-            stars: document.getElementById('account-stars'),
-            wins: document.getElementById('account-wins'),
-            losses: document.getElementById('account-losses'),
-            draws: document.getElementById('account-draws'),
-            firstGame: document.getElementById('account-first-game'),
-            lastGame: document.getElementById('account-last-game'),
-            userIdDisplay: document.getElementById('user-id-display')
-        },
-        toast: {
-            resultToast: document.getElementById('result-toast'),
-            title: document.getElementById('toast-title'),
-            message: document.getElementById('toast-message')
-        },
-        controls: {
-            langSwitchBtn: document.getElementById('lang-switch-btn'),
-            langFlag: document.getElementById('lang-flag'),
-            langText: document.getElementById('lang-text'),
-            audioElement: document.getElementById('background-music'),
-            audioControls: document.getElementById('audio-controls'),
-            audioIcon: document.getElementById('audio-icon')
-        }
+    // DOM Elements
+    const screens = {
+      loading: document.getElementById('loading-screen'),
+      menu: document.getElementById('menu-screen'),
+      game: document.getElementById('game-screen'),
+      account: document.getElementById('account-screen')
     };
+    const boardEl = document.getElementById('game-board');
+    const turnDisplay = document.getElementById('turn-display');
+    const restartOverlay = document.getElementById('restart-overlay'); // RE-ADDED
+    const gameBoardContainer = document.getElementById('game-board-container');
+    const gameControlButtons = document.getElementById('game-control-buttons'); 
+    const gameStatusBar = document.getElementById('game-status-bar'); 
+    const resultToast = document.getElementById('result-toast');
+    const toastTitle = document.getElementById('toast-title');
+    const toastMessage = document.getElementById('toast-message');
+    const langSwitchBtn = document.getElementById('lang-switch-btn');
+    const langFlagEl = document.getElementById('lang-flag');
+    const langTextEl = document.getElementById('lang-text');
+    let winningLineEl = document.getElementById('winning-line'); // Now a let, reassigned in generateBoard
     
-    // ----------------------------------------------------------------------
-    // --- 3. CORE UTILITIES ---
-    // ----------------------------------------------------------------------
+    // Control Buttons
+    const endGameBtn = document.getElementById('end-game-btn');
 
-    /**
-     * @module UILogic
-     * Handles all Screen transitions, Localization, and basic UI manipulations.
-     */
-    const UILogic = {
-        /**
-         * Switches the active screen.
-         * @param {string} screenName - The name of the screen to show ('menu', 'game', 'account').
-         */
-        showScreen(screenName) {
-            Object.values(DOM.screens).forEach(el => el.classList.add('hidden'));
-            if (DOM.screens[screenName]) {
-                DOM.screens[screenName].classList.remove('hidden');
-            }
-            
-            // Reset game state UI when leaving game screen
-            if (screenName !== 'game') {
-                AppState.isGameActive = false;
-                AppState.isGameOver = false;
-                
-                UILogic.removeBlurEffects();
-                GameLogic.clearWinningLine();
-                UILogic.hideRestartOverlay();
-            }
-            
-            // Update document direction
-            document.documentElement.dir = AppState.currentLang === 'ar' ? 'rtl' : 'ltr';
-        },
 
-        /**
-         * Updates all text content based on the current language setting.
-         */
-        setLanguage(lang) {
-            AppState.currentLang = lang;
-            localStorage.setItem('appLang', lang);
-            
-            const currentI18n = i18n[lang];
+    // Colors for winning line
+    const WIN_COLOR = '#00ff73'; // Neon Green for User (X)
+    const LOSE_COLOR = '#ff4500'; // Orange Red for Ali (O)
+    
+    // Duration for result toast visibility (1500ms = 1.5 seconds)
+    const TOAST_VISIBLE_DURATION_MS = 1500; 
 
-            // Update flags and text in the button
-            if (lang === 'ar') {
-                DOM.controls.langFlag.textContent = '🇮🇶';
-                DOM.controls.langText.textContent = 'العربية';
-            } else {
-                DOM.controls.langFlag.textContent = '🇺🇸';
-                DOM.controls.langText.textContent = 'USA';
-            }
+    // --- Localization Functions ---
 
-            // Update all data-lang elements
-            document.querySelectorAll('[data-ar]').forEach(el => {
-                const arText = el.getAttribute('data-ar');
-                const enText = el.getAttribute('data-en');
-                if (arText && enText) {
-                    el.textContent = (lang === 'ar' ? arText : enText);
-                }
-            });
-            
-            // Update dynamic content
-            UILogic.updateTurnDisplay();
-            UILogic.updateAccountScreen();
-            
-            // Regenerate overlay content if visible
-            if (AppState.isGameOver && !DOM.screens.game.classList.contains('hidden')) {
-                 UILogic.showRestartOverlay();
-            }
-            
-            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-        },
-
-        /**
-         * Toggles between Arabic and English.
-         */
-        toggleLanguage() {
-            UILogic.setLanguage(AppState.currentLang === 'ar' ? 'en' : 'ar');
-        },
-
-        /**
-         * Updates the display indicating whose turn it is.
-         */
-        updateTurnDisplay() {
-            const text = AppState.currentPlayer === 'X' 
-                ? i18n[AppState.currentLang].turn_you 
-                : i18n[AppState.currentLang].turn_ali;
-            DOM.game.turnDisplay.textContent = text;
-        },
-
-        /**
-         * Shows the floating result notification (Toast).
-         * @param {string} title - The title of the result.
-         * @param {string} message - The accompanying message.
-         * @param {string} bgColor - Background color.
-         * @param {string} borderColor - Border color.
-         */
-        showResultToast(title, message, bgColor, borderColor) {
-            DOM.toast.title.textContent = title;
-            DOM.toast.message.textContent = message;
-            DOM.toast.resultToast.style.backgroundColor = bgColor;
-            DOM.toast.resultToast.style.borderColor = borderColor;
-            DOM.toast.resultToast.style.display = 'block'; 
-            
-            // Fade in and apply blur effects
-            setTimeout(() => {
-                DOM.toast.resultToast.style.opacity = 1;
-                UILogic.applyBlurEffects();
-            }, 50); 
-            
-            // Hide toast and show restart overlay after duration
-            setTimeout(() => {
-                DOM.toast.resultToast.style.opacity = 0;
-                
-                setTimeout(() => {
-                    DOM.toast.resultToast.style.display = 'none';
-                    UILogic.showRestartOverlay();
-                }, 200); // Wait for fade out
-                
-            }, 50 + TOAST_VISIBLE_DURATION_MS);
-        },
+    function setLanguage(lang) {
+        currentLang = lang;
+        localStorage.setItem('appLang', lang);
         
-        /**
-         * Applies the visual blur effect to game elements.
-         */
-        applyBlurEffects() {
-            DOM.game.boardContainer.classList.add('blur-target');
-            DOM.game.controlButtons.classList.add('blur-target');
-            DOM.game.statusBar.classList.add('blur-target');
-        },
-
-        /**
-         * Removes the visual blur effect from game elements.
-         */
-        removeBlurEffects() {
-            DOM.game.boardContainer.classList.remove('blur-target');
-            DOM.game.controlButtons.classList.remove('blur-target');
-            DOM.game.statusBar.classList.remove('blur-target');
-        },
-        
-        /**
-         * Shows the restart/menu buttons overlay after game end.
-         */
-        showRestartOverlay() {
-            const lang = AppState.currentLang;
-            
-            DOM.game.restartOverlay.innerHTML = `
-                <div class="flex flex-col space-y-4 p-8 w-full max-w-xs">
-                    <button id="restart-game-btn" class="game-button w-full px-6 py-3 rounded-xl text-lg font-bold">
-                        <span data-ar="${i18n[lang].restart_game}" data-en="${i18n.en.restart_game}">${i18n[lang].restart_game}</span>
-                    </button>
-                    <button id="return-to-menu-btn-overlay" class="game-button w-full px-6 py-3 rounded-xl text-lg font-bold bg-gray-600 border-gray-500 text-white" style="box-shadow: 0 4px #444; border-color: #555;">
-                        <span data-ar="${i18n[lang].end_game_menu}" data-en="${i18n.en.end_game_menu}">${i18n[lang].end_game_menu}</span>
-                    </button>
-                </div>
-            `;
-            
-            // Attach listeners to the newly created buttons
-            document.getElementById('restart-game-btn').addEventListener('click', GameLogic.startGame);
-            document.getElementById('return-to-menu-btn-overlay').addEventListener('click', () => UILogic.showScreen('menu'));
-            
-            DOM.game.restartOverlay.classList.remove('hidden');
-            // CRITICAL FIX: Add 'visible' class to enable pointer-events
-            setTimeout(() => {
-                DOM.game.restartOverlay.classList.add('visible'); 
-            }, 50); 
-        },
-        
-        /**
-         * Hides the restart overlay.
-         */
-        hideRestartOverlay() {
-            DOM.game.restartOverlay.classList.remove('visible');
-            setTimeout(() => {
-                DOM.game.restartOverlay.classList.add('hidden');
-                DOM.game.restartOverlay.innerHTML = '';
-            }, 300); // Matches opacity transition duration
-        },
-
-        /**
-         * Updates the account and stats display.
-         */
-        updateAccountScreen() {
-            const stats = AppState.userStats;
-            const lang = AppState.currentLang;
-            
-            // Format star balance with color
-            let starClass = 'text-gray-400';
-            if (stats.stars > 0) {
-                starClass = 'marker-X';
-            } else if (stats.stars < 0) {
-                starClass = 'marker-O';
-            }
-            
-            DOM.account.stars.innerHTML = `${stats.stars} <i class="ph ph-star-fill text-3xl ${lang === 'ar' ? 'mr-1' : 'ml-1'}"></i>`;
-            DOM.account.stars.className = `text-3xl font-bold flex items-center ${starClass}`;
-
-            DOM.account.wins.textContent = stats.wins;
-            DOM.account.losses.textContent = stats.losses;
-            DOM.account.draws.textContent = stats.draws;
-            DOM.account.firstGame.textContent = UILogic.formatDate(stats.firstGameDate);
-            DOM.account.lastGame.textContent = UILogic.formatDate(stats.lastGameDate);
-            
-            if (AppState.userId) {
-                 DOM.account.userIdDisplay.textContent = AppState.userId;
-            } else {
-                 DOM.account.userIdDisplay.textContent = i18n[lang].loading;
-            }
-        },
-        
-        /**
-         * Utility to format ISO date string.
-         * @param {string} timestamp - ISO date string.
-         * @returns {string} Formatted date string.
-         */
-        formatDate(timestamp) {
-            if (timestamp === 'N/A' || !timestamp) return 'N/A';
-            try {
-                const date = new Date(timestamp);
-                // Use English locale for consistent date format regardless of app language
-                return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-            } catch (e) {
-                console.error("Date formatting error:", e);
-                return 'N/A';
-            }
+        // Update flags and text in the button
+        if (lang === 'ar') {
+            document.documentElement.lang = 'ar';
+            document.documentElement.dir = 'rtl';
+            langFlagEl.textContent = '🇮🇶';
+            langTextEl.textContent = 'العربية';
+        } else {
+            document.documentElement.lang = 'en';
+            document.documentElement.dir = 'ltr';
+            langFlagEl.textContent = '🇺🇸';
+            langTextEl.textContent = 'USA';
         }
-    };
-    
-    // ----------------------------------------------------------------------
-    // --- 4. FIREBASE DATA MANAGEMENT ---
-    // ----------------------------------------------------------------------
 
-    /**
-     * @module FirebaseManager
-     * Handles all Firebase initialization, authentication, and data persistence.
-     */
-    const FirebaseManager = {
-        /**
-         * Initializes Firebase services and handles authentication.
-         */
-        async init() {
-            try {
-                const app = initializeApp(AppState.firebaseConfig);
-                AppState.db = getFirestore(app);
-                AppState.auth = getAuth(app);
-                
-                await setPersistence(AppState.auth, browserLocalPersistence);
-
-                onAuthStateChanged(AppState.auth, async (user) => {
-                    if (user) {
-                        AppState.userId = user.uid;
-                        AppState.statsRef = doc(AppState.db, `/artifacts/${AppState.appId}/users/${AppState.userId}/tictactoe/stats`);
-                        FirebaseManager.loadStats();
-                        AppState.isAuthReady = true;
-                    } else {
-                        // Sign in anonymously if no token or user exists
-                        const customToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-                        if (customToken) {
-                            await signInWithCustomToken(AppState.auth, customToken);
-                        } else {
-                            await signInAnonymously(AppState.auth);
-                        }
-                    }
-                });
-
-            } catch (error) {
-                console.error("Firebase Initialization Error:", error);
-                // If initialization fails, proceed to menu without persistence
-                UILogic.showScreen('menu'); 
+        // Update all data-lang elements
+        document.querySelectorAll('[data-ar]').forEach(el => {
+            const arText = el.getAttribute('data-ar');
+            const enText = el.getAttribute('data-en');
+            // Only update if text is present to avoid overwriting structural content
+            if (arText && enText) {
+                el.textContent = (lang === 'ar' ? arText : enText);
             }
-        },
-
-        /**
-         * Listens to user stats document for real-time updates.
-         */
-        loadStats() {
-            if (!AppState.statsRef) return;
-            
-            onSnapshot(AppState.statsRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    // Merge data to prevent overwriting missing fields
-                    AppState.userStats = { ...AppState.userStats, ...docSnap.data() }; 
-                } else {
-                    // Initialize if document does not exist
-                    AppState.userStats = {
-                        stars: 0, wins: 0, losses: 0, draws: 0, firstGameDate: 'N/A', lastGameDate: 'N/A'
-                    };
-                }
-                UILogic.updateAccountScreen();
-                UILogic.showScreen('menu'); // Show menu after auth and data load
-            }, (error) => {
-                console.error("Firestore Snapshot Error:", error);
-                // Show menu even if snapshot fails
-                UILogic.showScreen('menu'); 
-            });
-        },
-
-        /**
-         * Updates user stats in Firestore after a game finishes.
-         * @param {'X'|'O'|'Draw'} result - The result of the game.
-         */
-        async updateStats(result) {
-            if (!AppState.statsRef || !AppState.isAuthReady) {
-                console.warn("Stats update skipped: Firebase not ready or user not authenticated.");
-                return;
-            }
-            
-            const now = new Date().toISOString();
-            const isNewUser = AppState.userStats.firstGameDate === 'N/A';
-            
-            let starsChange = 0;
-            if (result === 'X') { 
-                starsChange = 1;
-                AppState.userStats.wins++;
-            } else if (result === 'O') { 
-                starsChange = -1;
-                AppState.userStats.losses++;
-            } else {
-                AppState.userStats.draws++;
-            }
-
-            AppState.userStats.stars = (AppState.userStats.stars || 0) + starsChange;
-            AppState.userStats.lastGameDate = now;
-            if (isNewUser) {
-                AppState.userStats.firstGameDate = now;
-            }
-
-            try {
-                if (isNewUser) {
-                    await setDoc(AppState.statsRef, AppState.userStats);
-                } else {
-                    await updateDoc(AppState.statsRef, AppState.userStats);
-                }
-                UILogic.updateAccountScreen();
-            } catch (e) {
-                console.error("Error updating stats in Firestore:", e);
-            }
-        }
-    };
-    
-    // ----------------------------------------------------------------------
-    // --- 5. AUDIO MANAGER ---
-    // ----------------------------------------------------------------------
-    
-    /**
-     * @module AudioManager
-     * Controls background music playback and UI controls.
-     */
-    const AudioManager = {
-        /**
-         * Sets initial state and adds listeners.
-         */
-        init() {
-            DOM.controls.audioElement.muted = AppState.isMusicMuted;
-            this.updateIcon();
-            DOM.controls.audioControls.addEventListener('click', this.toggleMute);
-        },
-        
-        /**
-         * Toggles the mute state and updates the icon.
-         */
-        toggleMute() {
-            AppState.isMusicMuted = !AppState.isMusicMuted;
-            DOM.controls.audioElement.muted = AppState.isMusicMuted;
-            AudioManager.updateIcon();
-        },
-        
-        /**
-         * Updates the visual icon based on mute state.
-         */
-        updateIcon() {
-            if (AppState.isMusicMuted) {
-                DOM.controls.audioIcon.classList.replace('ph-speaker-simple-high', 'ph-speaker-simple-slash');
-            } else {
-                DOM.controls.audioIcon.classList.replace('ph-speaker-simple-slash', 'ph-speaker-simple-high');
-            }
-        },
-
-        /**
-         * Attempts to start playback. Should be called by a user gesture.
-         */
-        playMusic() {
-            if (!AppState.isMusicPlaying) {
-                DOM.controls.audioElement.play().then(() => {
-                    AppState.isMusicPlaying = true;
-                    console.log("Music started playing.");
-                }).catch(error => {
-                    console.warn("Music auto-play failed, usually blocked by browser.", error);
-                    AppState.isMusicPlaying = false;
-                });
-            }
-        },
-        
-        /**
-         * Pauses the music.
-         */
-        pauseMusic() {
-            if (AppState.isMusicPlaying) {
-                DOM.controls.audioElement.pause();
-                AppState.isMusicPlaying = false;
-            }
-        }
-    };
-    
-    // ----------------------------------------------------------------------
-    // --- 6. GAME LOGIC ---
-    // ----------------------------------------------------------------------
-
-    /**
-     * @module GameLogic
-     * Contains all game-specific logic: board state, AI, win checks, and game flow.
-     */
-    const GameLogic = {
-        winningConditions: [
-            [0, 1, 2], [3, 4, 5], [6, 7, 8], 
-            [0, 3, 6], [1, 4, 7], [2, 5, 8], 
-            [0, 4, 8], [2, 4, 6]            
-        ],
-
-        /**
-         * Generates the board HTML structure and attaches listeners.
-         */
-        generateBoard() {
-            DOM.game.board.innerHTML = ''; 
-            for (let i = 0; i < 9; i++) {
-                const cell = document.createElement('div');
-                cell.id = `cell-${i}`;
-                cell.classList.add('cell');
-                cell.addEventListener('click', () => GameLogic.handleMove(i));
-                DOM.game.board.appendChild(cell);
-            }
-            // Re-add winning line container
-            const lineContainer = document.createElement('div');
-            lineContainer.id = 'winning-line';
-            lineContainer.classList.add('absolute', 'inset-0', 'pointer-events-none');
-            DOM.game.board.appendChild(lineContainer);
-            DOM.game.winningLine = document.getElementById('winning-line');
-        },
-
-        /**
-         * Starts or restarts a new game.
-         */
-        startGame() {
-            // CRITICAL: Play music on user gesture
-            AudioManager.playMusic(); 
-            
-            AppState.board = Array(9).fill('');
-            AppState.currentPlayer = 'X';
-            AppState.isGameActive = true; // User can click now
-            AppState.isGameOver = false;
-            
-            UILogic.showScreen('game');
-            UILogic.updateTurnDisplay();
-            UILogic.removeBlurEffects();
-            UILogic.hideRestartOverlay();
-            GameLogic.clearWinningLine(); 
-            
-            // Clear board visuals
-            for (let i = 0; i < 9; i++) {
-                const cellEl = document.getElementById(`cell-${i}`);
-                if (cellEl) cellEl.innerHTML = '';
-            }
-        },
-
-        /**
-         * Handles user (X) move.
-         * @param {number} clickedCellIndex - Index of the clicked cell (0-8).
-         */
-        handleMove(clickedCellIndex) {
-            // CRITICAL BUG FIX: Check if game is active or cell is taken
-            if (!AppState.isGameActive || AppState.board[clickedCellIndex] !== '' || AppState.isGameOver) return;
-
-            // 1. User Move (X)
-            AppState.board[clickedCellIndex] = 'X';
-            document.getElementById(`cell-${clickedCellIndex}`).innerHTML = `<span class="marker-X">X</span>`;
-            
-            // 2. Check Win immediately after user move
-            let { winner, combo } = GameLogic.checkWin(AppState.board);
-            if (winner) return GameLogic.gameEnd(winner, combo); 
-            
-            // 3. Switch to AI turn
-            AppState.currentPlayer = 'O';
-            UILogic.updateTurnDisplay();
-            AppState.isGameActive = false; // Disable clicks during AI turn
-            
-            // 4. Ali's move after a short delay
-            setTimeout(GameLogic.robotMove, 700);
-        },
-
-        /**
-         * The AI (O) move logic using Minimax.
-         */
-        robotMove() {
-            const availSpots = AppState.board.map((val, i) => val === '' ? i : -1).filter(i => i !== -1);
-            
-            if (availSpots.length === 0) return GameLogic.gameEnd('Draw', null);
-
-            let bestSpot = -1;
-            
-            // Heuristic for first move (if user took center, take a corner)
-            if (availSpots.length === 8 && AppState.board[4] === 'X') {
-                const corners = [0, 2, 6, 8].filter(i => AppState.board[i] === '');
-                bestSpot = corners[Math.floor(Math.random() * corners.length)];
-            }
-            
-            // Use Minimax for all other moves for optimal play
-            if (bestSpot === -1) {
-                bestSpot = GameLogic.minimax(AppState.board, 'O').index;
-            }
-
-            // 1. Ali Move (O)
-            AppState.board[bestSpot] = 'O';
-            const cellEl = document.getElementById(`cell-${bestSpot}`);
-            if (cellEl) cellEl.innerHTML = `<span class="marker-O">O</span>`;
-
-            // 2. Check Win after AI move
-            let { winner, combo } = GameLogic.checkWin(AppState.board);
-            if (winner) return GameLogic.gameEnd(winner, combo); 
-
-            // 3. Switch back to User turn
-            AppState.currentPlayer = 'X';
-            UILogic.updateTurnDisplay();
-            AppState.isGameActive = true; // Re-enable clicks
-        },
-
-        /**
-         * Minimax algorithm for optimal AI moves.
-         * @param {Array<string>} newBoard - The current board state.
-         * @param {('X'|'O')} player - The current player for this evaluation step.
-         * @returns {{score: number, index: number}} The best move index and its score.
-         */
-        minimax(newBoard, player) {
-            const scores = { X: -10, O: 10, Draw: 0 };
-            const { winner } = GameLogic.checkWin(newBoard);
-            if (winner) {
-                return { score: scores[winner] };
-            }
-
-            const availSpots = newBoard.map((val, i) => val === '' ? i : -1).filter(i => i !== -1);
-            const moves = [];
-
-            for (let i = 0; i < availSpots.length; i++) {
-                const move = {};
-                const index = availSpots[i];
-                move.index = index;
-                newBoard[index] = player;
-
-                if (player === 'O') { 
-                    move.score = GameLogic.minimax(newBoard, 'X').score;
-                } else { 
-                    move.score = GameLogic.minimax(newBoard, 'O').score;
-                }
-
-                newBoard[index] = ''; 
-                moves.push(move);
-            }
-
-            let bestMove = 0;
-            if (player === 'O') {
-                let bestScore = -Infinity;
-                for (let i = 0; i < moves.length; i++) {
-                    if (moves[i].score > bestScore) {
-                        bestScore = moves[i].score;
-                        bestMove = i;
-                    }
-                }
-            } else {
-                let bestScore = Infinity;
-                for (let i = 0; i < moves.length; i++) {
-                    if (moves[i].score < bestScore) {
-                        bestScore = moves[i].score;
-                        bestMove = i;
-                    }
-                }
-            }
-
-            return moves[bestMove];
-        },
-        
-        /**
-         * Checks the board for a win or draw condition.
-         * @param {Array<string>} currentBoard - The board state.
-         * @returns {{winner: ('X'|'O'|'Draw'|null), combo: (Array<number>|null)}}
-         */
-        checkWin(currentBoard) {
-            for (let i = 0; i < GameLogic.winningConditions.length; i++) {
-                const [a, b, c] = GameLogic.winningConditions[i];
-                if (currentBoard[a] && currentBoard[a] === currentBoard[b] && currentBoard[a] === currentBoard[c]) {
-                    return { winner: currentBoard[a], combo: GameLogic.winningConditions[i] }; 
-                }
-            }
-            if (!currentBoard.includes('')) {
-                return { winner: 'Draw', combo: null };
-            }
-            return { winner: null, combo: null };
-        },
-
-        /**
-         * Ends the game, displays results, updates stats, and shows the restart overlay.
-         * @param {('X'|'O'|'Draw')} winner - The winner or 'Draw'.
-         * @param {Array<number>|null} combo - The winning cell indices.
-         */
-        gameEnd(winner, combo) {
-            AppState.isGameActive = false;
-            AppState.isGameOver = true;
-            
-            let title, message, bgColor, borderColor;
-            
-            if (combo) {
-                GameLogic.drawWinningLine(combo, winner);
-            }
-            
-            if (winner === 'X') {
-                title = i18n[AppState.currentLang].win_title;
-                message = i18n[AppState.currentLang].win_message;
-                bgColor = 'rgba(0, 100, 0, 0.9)'; 
-                borderColor = WIN_COLOR; 
-                FirebaseManager.updateStats('X');
-            } else if (winner === 'O') {
-                title = i18n[AppState.currentLang].lose_title;
-                message = i18n[AppState.currentLang].lose_message;
-                bgColor = 'rgba(139, 0, 0, 0.9)'; 
-                borderColor = LOSE_COLOR; 
-                FirebaseManager.updateStats('O');
-            } else { // Draw
-                title = i18n[AppState.currentLang].draw_title;
-                message = i18n[AppState.currentLang].draw_message;
-                bgColor = 'rgba(51, 51, 51, 0.9)'; 
-                borderColor = '#e0e0e0';
-                FirebaseManager.updateStats('Draw');
-            }
-            
-            // Show toast which manages the rest of the game-end flow (blur, overlay)
-            UILogic.showResultToast(title, message, bgColor, borderColor);
-        },
-        
-        /**
-         * Draws the winning line using CSS transformations.
-         */
-        drawWinningLine(combo, winner) {
-            const color = winner === 'X' ? WIN_COLOR : LOSE_COLOR;
-            const boardEl = DOM.game.board;
-            const boardRect = boardEl.getBoundingClientRect();
-
-            const centers = combo.map(i => {
-                const cell = document.getElementById(`cell-${i}`);
-                const rect = cell.getBoundingClientRect();
-                return {
-                    x: rect.left + rect.width / 2 - boardRect.left,
-                    y: rect.top + rect.height / 2 - boardRect.top
-                };
-            });
-
-            const start = centers[0];
-            const end = centers[2];
-
-            const dx = end.x - start.x;
-            const dy = end.y - start.y;
-            const length = Math.sqrt(dx * dx + dy * dy) + 30; // Extend line slightly
-            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-
-            const line = document.createElement('div');
-            line.classList.add('win-line', 'win-line-active');
-            line.style.cssText = `
-                background-color: ${color};
-                transform: rotate(${angle}deg);
-                width: ${length}px;
-                height: 15px; /* Thicker line */
-                left: ${start.x}px;
-                top: ${start.y}px;
-                transform-origin: 0% 0%;
-                box-shadow: 0 0 20px ${color};
-            `;
-            DOM.game.winningLine.appendChild(line);
-            DOM.game.winningLine.style.color = color;
-        },
-        
-        /**
-         * Clears the winning line visualization.
-         */
-        clearWinningLine() {
-            if (DOM.game.winningLine) {
-                DOM.game.winningLine.innerHTML = '';
-                DOM.game.winningLine.style.color = '';
-            }
-        }
-    };
-    
-    // ----------------------------------------------------------------------
-    // --- 7. APPLICATION INITIALIZATION ---
-    // ----------------------------------------------------------------------
-
-    /**
-     * Sets up event listeners for all control buttons.
-     */
-    function setupEventListeners() {
-        document.getElementById('start-game-btn').addEventListener('click', GameLogic.startGame);
-        document.getElementById('account-btn').addEventListener('click', () => UILogic.showScreen('account'));
-        document.getElementById('back-to-menu-btn').addEventListener('click', () => UILogic.showScreen('menu'));
-        document.getElementById('end-game-btn').addEventListener('click', (event) => {
-            event.preventDefault(); 
-            UILogic.showScreen('menu');
         });
         
-        DOM.controls.langSwitchBtn.addEventListener('click', UILogic.toggleLanguage);
-    }
-
-    /**
-     * Main function to initialize the entire application.
-     */
-    async function AppInit() {
-        console.log("AppInit: Starting luxurious Tic-Tac-Toe initialization...");
-        
-        // 1. Setup UI and Visuals
-        GameLogic.generateBoard();
-        setupEventListeners();
-        UILogic.setLanguage(AppState.currentLang);
-        
-        // 2. Setup Audio
-        AudioManager.init();
-
-        // 3. Initialize Firebase and Authentication
-        await FirebaseManager.init();
-
-        // 4. Check for Telegram environment
-        if (typeof window.Telegram === 'undefined') {
-            console.warn("Telegram Web App environment not detected. Running as standalone web app.");
-        } else {
-            window.Telegram.WebApp.ready();
-            window.Telegram.WebApp.expand();
+        // Update dynamic content (like turn display)
+        updateTurnDisplay();
+        updateAccountScreen();
+        // Regenerate overlay content in case language changed while game over
+        if (isGameOver && screens.game.classList.contains('hidden') === false) {
+             showRestartOverlay();
         }
-        
-        console.log("AppInit: Initialization complete. Displaying Menu.");
     }
 
-    // Start the application after all modules are defined
-    window.onload = AppInit;
+    function toggleLanguage() {
+        setLanguage(currentLang === 'ar' ? 'en' : 'ar');
+    }
+
+    function updateTurnDisplay() {
+        if (currentPlayer === 'X') {
+            turnDisplay.textContent = i18n[currentLang].turn_you;
+        } else if (currentPlayer === 'O') {
+            turnDisplay.textContent = i18n[currentLang].turn_ali;
+        }
+    }
+
+
+    // Utility to format date
+    const formatDate = (timestamp) => {
+      if (timestamp === 'N/A' || !timestamp) return 'N/A';
+      try {
+        const date = new Date(timestamp);
+        // Use English locale for consistent date format regardless of app language
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      } catch (e) {
+        return timestamp;
+      }
+    };
+
+    // --- FIREBASE AND STATE MANAGEMENT ---
+
+    async function initializeFirebase() {
+      try {
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        auth = getAuth(app);
+        
+        await setPersistence(auth, browserLocalPersistence);
+
+        onAuthStateChanged(auth, async (user) => {
+          if (user) {
+            userId = user.uid;
+            statsRef = doc(db, `/artifacts/${appId}/users/${userId}/tictactoe/stats`);
+            loadStats();
+          } else {
+            // Sign in anonymously if no token or user exists
+            const customToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+            if (customToken) {
+              await signInWithCustomToken(auth, customToken);
+            } else {
+              await signInAnonymously(auth);
+            }
+          }
+        });
+
+      } catch (error) {
+        console.error("Firebase Initialization Error:", error);
+        showScreen('menu'); 
+      }
+    }
+
+    function loadStats() {
+      onSnapshot(statsRef, (docSnap) => {
+        if (docSnap.exists()) {
+          userStats = docSnap.data();
+        } else {
+          userStats = {
+            stars: 0, wins: 0, losses: 0, draws: 0, firstGameDate: 'N/A', lastGameDate: 'N/A'
+          };
+        }
+        updateAccountScreen();
+        showScreen('menu'); 
+      }, (error) => {
+        console.error("Firestore Snapshot Error:", error);
+        showScreen('menu'); 
+      });
+    }
+
+    async function updateStats(result) {
+      const now = new Date().toISOString();
+      const isNewUser = userStats.firstGameDate === 'N/A';
+      
+      let starsChange = 0;
+      if (result === 'X') { // User Win: +1 Star
+        starsChange = 1;
+        userStats.wins++;
+      } else if (result === 'O') { // Ali Win: -1 Star
+        starsChange = -1;
+        userStats.losses++;
+      } else { // Draw: 0 Change
+        userStats.draws++;
+      }
+
+      userStats.stars = (userStats.stars || 0) + starsChange;
+      userStats.lastGameDate = now;
+      if (isNewUser) {
+        userStats.firstGameDate = now;
+      }
+
+      try {
+        if (isNewUser) {
+          await setDoc(statsRef, userStats);
+        } else {
+          await updateDoc(statsRef, userStats);
+        }
+        updateAccountScreen();
+      } catch (e) {
+        console.error("Error updating stats:", e);
+      }
+    }
+
+    function updateAccountScreen() {
+      const starsEl = document.getElementById('account-stars');
+      
+      // Update star balance display
+      starsEl.innerHTML = `${userStats.stars} <i class="ph ph-star-fill text-2xl ${currentLang === 'ar' ? 'mr-1' : 'ml-1'}"></i>`;
+      
+      // Update color based on balance
+      starsEl.classList.remove('marker-X', 'marker-O', 'text-gray-400');
+      if (userStats.stars > 0) {
+        starsEl.classList.add('marker-X');
+      } else if (userStats.stars < 0) {
+        starsEl.classList.add('marker-O');
+      } else {
+        starsEl.classList.add('text-gray-400');
+      }
+      
+      document.getElementById('account-wins').textContent = userStats.wins;
+      document.getElementById('account-losses').textContent = userStats.losses;
+      document.getElementById('account-draws').textContent = userStats.draws;
+      document.getElementById('account-first-game').textContent = formatDate(userStats.firstGameDate);
+      document.getElementById('account-last-game').textContent = formatDate(userStats.lastGameDate);
+    }
+
+    function showScreen(screenName) {
+      Object.values(screens).forEach(el => el.classList.add('hidden'));
+      if (screens[screenName]) {
+        screens[screenName].classList.remove('hidden');
+      }
+      if (screenName !== 'game') {
+        // Reset game state when leaving game screen
+        isGameActive = false;
+        isGameOver = false; 
+        
+        // Clear all game-end effects
+        gameBoardContainer.classList.remove('blur-target');
+        gameControlButtons.classList.remove('blur-target');
+        gameStatusBar.classList.remove('blur-target');
+        
+        restartOverlay.classList.add('hidden'); // Ensure overlay is hidden
+        restartOverlay.style.opacity = 0;
+        clearWinningLine();
+      }
+      
+      // Update direction for new screen
+      if (currentLang === 'ar') {
+        document.documentElement.dir = 'rtl';
+      } else {
+        document.documentElement.dir = 'ltr';
+      }
+    }
+
+    // --- GAME LOGIC ---
+
+    const winningConditions = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8], 
+      [0, 3, 6], [1, 4, 7], [2, 5, 8], 
+      [0, 4, 8], [2, 4, 6]            
+    ];
+
+    function checkWin(currentBoard) {
+      for (let i = 0; i < winningConditions.length; i++) {
+        const [a, b, c] = winningConditions[i];
+        if (currentBoard[a] && currentBoard[a] === currentBoard[b] && currentBoard[a] === currentBoard[c]) {
+          return { winner: currentBoard[a], combo: winningConditions[i] }; 
+        }
+      }
+      if (!currentBoard.includes('')) {
+        return { winner: 'Draw', combo: null };
+      }
+      return { winner: null, combo: null };
+    }
+
+    function handleMove(clickedCellIndex) {
+      if (!isGameActive || board[clickedCellIndex] !== '' || isGameOver) return;
+
+      // User Move (X)
+      board[clickedCellIndex] = 'X';
+      document.getElementById(`cell-${clickedCellIndex}`).innerHTML = `<span class="marker-X">X</span>`;
+      
+      // *** FIX: Check win immediately after user move ***
+      let { winner, combo } = checkWin(board);
+      if (winner) return gameEnd(winner, combo); 
+      
+      currentPlayer = 'O';
+      updateTurnDisplay();
+      isGameActive = false; 
+      
+      // Ali's move after a short delay
+      setTimeout(robotMove, 700);
+    }
+
+    // --- SMART AI (Minimax Algorithm) ---
+    
+    const scores = {
+      X: -10, // Minimizer (User)
+      O: 10,  // Maximizer (Ali Bashar)
+      Draw: 0
+    };
+
+    function minimax(newBoard, player) {
+      const { winner } = checkWin(newBoard);
+      if (winner) {
+        return { score: scores[winner] };
+      }
+
+      const availSpots = newBoard.map((val, i) => val === '' ? i : -1).filter(i => i !== -1);
+      const moves = [];
+
+      for (let i = 0; i < availSpots.length; i++) {
+        const move = {};
+        const index = availSpots[i];
+        move.index = index;
+        newBoard[index] = player;
+
+        if (player === 'O') { // Ali (Maximizer)
+          const score = minimax(newBoard, 'X').score;
+          move.score = score;
+        } else { // User (Minimizer)
+          const score = minimax(newBoard, 'O').score;
+          move.score = score;
+        }
+
+        newBoard[index] = ''; // Reset the spot
+        moves.push(move);
+      }
+
+      let bestMove = 0;
+      if (player === 'O') {
+        let bestScore = -Infinity;
+        for (let i = 0; i < moves.length; i++) {
+          if (moves[i].score > bestScore) {
+            bestScore = moves[i].score;
+            bestMove = i;
+          }
+        }
+      } else {
+        let bestScore = Infinity;
+        for (let i = 0; i < moves.length; i++) {
+          if (moves[i].score < bestScore) {
+            bestScore = moves[i].score;
+            bestMove = i;
+          }
+        }
+      }
+
+      return moves[bestMove];
+    }
+
+    function robotMove() {
+      const availSpots = board.map((val, i) => val === '' ? i : -1).filter(i => i !== -1);
+      
+      if (availSpots.length === 0) return gameEnd('Draw', null);
+
+      // Simple AI fallback for the first move if center is taken (to speed up game)
+      let bestSpot = -1;
+      if (availSpots.length === 8 && board[4] === 'X') {
+          const corners = [0, 2, 6, 8].filter(i => board[i] === '');
+          bestSpot = corners[Math.floor(Math.random() * corners.length)];
+      }
+      
+      if (bestSpot === -1) {
+        // Use Minimax for other moves
+        bestSpot = minimax(board, 'O').index;
+      }
+
+      // Ali Move (O)
+      board[bestSpot] = 'O';
+      document.getElementById(`cell-${bestSpot}`).innerHTML = `<span class="marker-O">O</span>`;
+
+      let { winner, combo } = checkWin(board);
+      if (winner) return gameEnd(winner, combo); 
+
+      currentPlayer = 'X';
+      updateTurnDisplay();
+      isGameActive = true;
+    }
+    
+    // --- WINNING LINE DRAWING LOGIC ---
+
+    function drawWinningLine(combo, winner) {
+      const color = winner === 'X' ? WIN_COLOR : LOSE_COLOR;
+      
+      clearWinningLine();
+      
+      const boardRect = boardEl.getBoundingClientRect();
+
+      const centers = combo.map(i => {
+        const cell = document.getElementById(`cell-${i}`);
+        const rect = cell.getBoundingClientRect();
+        return {
+          x: rect.left + rect.width / 2 - boardRect.left,
+          y: rect.top + rect.height / 2 - boardRect.top
+        };
+      });
+
+      const start = centers[0];
+      const end = centers[2];
+
+      const dx = end.x - start.x;
+      const dy = end.y - start.y;
+      const length = Math.sqrt(dx * dx + dy * dy) + 20; 
+      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+      const line = document.createElement('div');
+      line.classList.add('win-line', 'win-line-active');
+      line.style.cssText = `
+        background-color: ${color};
+        transform: rotate(${angle}deg);
+        width: ${length}px;
+        height: 10px;
+        left: ${start.x}px;
+        top: ${start.y}px;
+        transform-origin: 0% 0%;
+      `;
+      winningLineEl.appendChild(line);
+      
+      winningLineEl.style.color = color;
+    }
+    
+    function clearWinningLine() {
+        if (winningLineEl) {
+            winningLineEl.innerHTML = '';
+            winningLineEl.style.color = '';
+        }
+    }
+
+    // Function to show the restart/menu buttons after the toast disappears
+    function showRestartOverlay() {
+        // Build the buttons inside the overlay
+        restartOverlay.innerHTML = `
+            <div class="flex flex-col space-y-4 p-8 w-full max-w-xs">
+                <button id="restart-game-btn" class="game-button w-full px-6 py-3 rounded-xl text-lg font-bold">
+                    <span data-ar="${i18n[currentLang].restart_game}" data-en="${i18n.en.restart_game}">${i18n[currentLang].restart_game}</span>
+                </button>
+                <button id="return-to-menu-btn-overlay" class="game-button w-full px-6 py-3 rounded-xl text-lg font-bold bg-gray-600 border-gray-500 text-white" style="box-shadow: 0 4px #444; border-color: #555;">
+                    <span data-ar="${i18n[currentLang].end_game_menu}" data-en="${i18n.en.end_game_menu}">${i18n[currentLang].end_game_menu}</span>
+                </button>
+            </div>
+        `;
+        
+        // Attach listeners to the newly created buttons
+        document.getElementById('restart-game-btn').addEventListener('click', startGame);
+        document.getElementById('return-to-menu-btn-overlay').addEventListener('click', () => showScreen('menu'));
+        
+        // Show the overlay
+        restartOverlay.classList.remove('hidden');
+        // Fade in
+        setTimeout(() => {
+            restartOverlay.style.opacity = 1;
+        }, 50); 
+    }
+
+
+    // --- GAME END FLOW ---
+
+    function gameEnd(winner, combo) {
+      isGameActive = false;
+      isGameOver = true;
+      let title, message, bgColor, borderColor;
+      
+      if (combo) {
+        drawWinningLine(combo, winner);
+      }
+      
+      if (winner === 'X') {
+        title = i18n[currentLang].win_title;
+        message = i18n[currentLang].win_message;
+        bgColor = '#006400'; 
+        borderColor = WIN_COLOR; 
+        updateStats('X');
+      } else if (winner === 'O') {
+        title = i18n[currentLang].lose_title;
+        message = i18n[currentLang].lose_message;
+        bgColor = '#8b0000'; 
+        borderColor = LOSE_COLOR; 
+        updateStats('O');
+      } else { // Draw
+        title = i18n[currentLang].draw_title;
+        message = i18n[currentLang].draw_message;
+        bgColor = '#333333'; 
+        borderColor = '#e0e0e0';
+        updateStats('Draw');
+      }
+      
+      // 1. Prepare and Show the result Toast
+      toastTitle.textContent = title;
+      toastMessage.textContent = message;
+      resultToast.style.backgroundColor = bgColor;
+      resultToast.style.borderColor = borderColor;
+      resultToast.style.display = 'block'; 
+      
+      // Delay before starting the smooth fade and blur
+      setTimeout(() => {
+        // Fade in (0.2s)
+        resultToast.style.opacity = 1;
+        // Start smooth blur on the game elements
+        gameBoardContainer.classList.add('blur-target');
+        gameControlButtons.classList.add('blur-target'); // Blur/Disable End Game button
+        gameStatusBar.classList.add('blur-target'); // Blur the turn display
+      }, 50); 
+
+      // 2. Hide toast and show restart overlay after the specified duration
+      setTimeout(() => {
+        // Fade out
+        resultToast.style.opacity = 0;
+        
+        // After fade out transition (0.2s), fully hide the toast and show the restart overlay
+        setTimeout(() => {
+            resultToast.style.display = 'none';
+            showRestartOverlay(); // SHOW RESTART BUTTONS IN OVERLAY
+        }, 200); 
+        
+      }, 50 + TOAST_VISIBLE_DURATION_MS); // Total time visible + initial delay
+    }
+    
+    // --- INITIALIZATION ---
+
+    function startGame() {
+      board = ['', '', '', '', ['', '', '', '', ''], '', '', ''];
+      currentPlayer = 'X';
+      isGameActive = true;
+      isGameOver = false;
+      showScreen('game');
+      updateTurnDisplay(); // Set initial turn text
+      
+      // Clear all game-end effects 
+      gameBoardContainer.classList.remove('blur-target');
+      gameControlButtons.classList.remove('blur-target');
+      gameStatusBar.classList.remove('blur-target');
+      restartOverlay.classList.add('hidden'); // Ensure overlay is hidden
+      restartOverlay.style.opacity = 0;
+      clearWinningLine(); 
+      
+      // Clear board visually
+      for (let i = 0; i < 9; i++) {
+        document.getElementById(`cell-${i}`).innerHTML = '';
+      }
+    }
+    
+    // Function to handle ending game and returning to menu (from the main button)
+    function handleGameEnd(event) {
+        event.preventDefault(); 
+        showScreen('menu'); // Return to the main menu screen
+    }
+
+    function generateBoard() {
+      boardEl.innerHTML = ''; // Clear existing content
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.id = `cell-${i}`;
+        cell.classList.add('cell');
+        cell.addEventListener('click', () => handleMove(i));
+        boardEl.appendChild(cell);
+      }
+      // Re-add and re-assign winningLineEl
+      const lineContainer = document.createElement('div');
+      lineContainer.id = 'winning-line';
+      lineContainer.classList.add('absolute', 'inset-0');
+      boardEl.appendChild(lineContainer);
+      winningLineEl = document.getElementById('winning-line');
+    }
+    
+
+    // --- EVENT LISTENERS ---
+    
+    document.getElementById('start-game-btn').addEventListener('click', startGame);
+    document.getElementById('account-btn').addEventListener('click', () => showScreen('account'));
+    document.getElementById('back-to-menu-btn').addEventListener('click', () => showScreen('menu'));
+    
+    // End Game listener
+    endGameBtn.addEventListener('click', handleGameEnd);
+
+    langSwitchBtn.addEventListener('click', toggleLanguage);
+
+    // 1. Generate the visual board structure
+    generateBoard();
+
+    // 2. Initialize Language (must run before Firebase tries to update text)
+    setLanguage(currentLang);
+
+    // 3. Initialize Firebase and load user stats
+    initializeFirebase();
+    
+    if (typeof window.Telegram === 'undefined') {
+        console.warn("Telegram Web App environment not detected.");
+    } else {
+        window.Telegram.WebApp.ready();
+        window.Telegram.WebApp.expand();
+    }
 
   </script>
 </body>
