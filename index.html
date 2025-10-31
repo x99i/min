@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لعبة إكس أو مع علي بشار</title>
+  <!-- Load Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Load Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <!-- Load Firebase SDKs -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, onSnapshot, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    
+    window.initializeApp = initializeApp;
+    window.getAuth = getAuth;
+    window.signInAnonymously = signInAnonymously;
+    window.onAuthStateChanged = onAuthStateChanged;
+    window.getFirestore = getFirestore;
+    window.doc = doc;
+    window.onSnapshot = onSnapshot;
+    window.setDoc = setDoc;
+    window.updateDoc = updateDoc;
+    window.setPersistence = setPersistence;
+    window.browserLocalPersistence = browserLocalPersistence;
+  </script>
+
+  <style>
+    /* Global Styles for Aesthetics and Responsiveness */
+    /* استخدام خط Tahoma كبديل لخط آيفون مع دعم العربية */
+    body {
+      color: #e0e0e0;
+      font-family: 'Tahoma', 'Inter', sans-serif; 
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+      background-color: #000;
+      position: relative;
+    }
+
+    /* --- VIDEO BACKGROUND & OVERLAY (Updated to Planets/Space) --- */
+    #video-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: -2; /* Below the overlay and content */
+    }
+    
+    /* Using a better space/planets video source */
+    #video-background source {
+        /* This path is a looping animated space background with planets */
+        content: url("https://assets.mixkit.co/videos/preview/mixkit-nebula-and-planet-in-outer-space-40615-large.mp4");
+    }
+
+    #video-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.5); /* 50% dark overlay for better contrast */
+      z-index: -1; /* Above the video, below the content */
+    }
+
+    /* Main App Card */
+    #app {
+        /* جعل خلفية التطبيق شفافة قليلاً لدمجها مع الخلفية المتحركة */
+        background-color: rgba(15, 15, 15, 0.95); /* Slightly darker background */
+        border: 1px solid #333;
+        position: relative;
+        z-index: 10;
+    }
+
+    /* Game Button Styling (High Aesthetics) */
+    .game-button {
+      transition: all 0.2s ease;
+      background-color: #2a2a2a; 
+      border: 2px solid #00ff73;
+      color: #00ff73; 
+      box-shadow: 0 4px #00a04d; 
+      font-weight: bold;
+    }
+
+    .game-button:hover {
+      background-color: #333;
+      box-shadow: 0 2px #00a04d;
+      transform: translateY(2px);
+    }
+    
+    /* Board Cell Styling (FIXED: Added aspect-square and set fixed size for cell content) */
+    .cell {
+      /* Dark Neumorphism Look */
+      background-color: #1c1c1c; 
+      border: none;
+      box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.7), 
+                  inset -2px -2px 5px rgba(60, 60, 60, 0.2);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      /* تم تثبيت حجم المربع باستخدام aspect-square في Tailwind */
+      aspect-ratio: 1 / 1; 
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      border-radius: 15px; /* Deeper rounded corners */
+      overflow: hidden; 
+      position: relative; 
+    }
+
+    .cell:hover {
+        background-color: #252525;
+    }
+
+    /* Custom X and O styles (Vivid Colors, High Dikka) */
+    .marker-X, .marker-O {
+      /* **الإصلاح الرئيسي:** جعل حجم الخط أكبر بكثير وثابتًا داخل المربع لملء المساحة دون تغيير أبعاد المربع نفسه */
+      font-size: 3rem; /* حجم كبير وثابت */
+      line-height: 1; /* إزالة أي مسافة إضافية في سطر الخط */
+      font-weight: 900;
+      user-select: none;
+    }
+    
+    .marker-X {
+      color: #00ff73; /* Neon Green */
+      text-shadow: 0 0 10px rgba(0, 255, 115, 0.7);
+    }
+    
+    .marker-O {
+      color: #ff4500; /* Orange Red */
+      text-shadow: 0 0 10px rgba(255, 69, 0, 0.7);
+    }
+    
+    /* Result Toast Styling */
+    #result-toast {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 1.5rem 3rem;
+      border-radius: 12px;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.9);
+      opacity: 0;
+      transition: opacity 0.4s ease-in-out;
+      z-index: 9999;
+      pointer-events: none;
+      border: 2px solid;
+    }
+
+    /* Blur Effect for Game Controls */
+    /* Applied to the game control buttons container */
+    #game-control-buttons.blur-controls {
+        filter: blur(5px);
+        pointer-events: none;
+        transition: filter 0.5s ease-out;
+    }
+    
+    /* Game Board Blur - only applies filter to the board container */
+    #game-board-container.blur-game > #game-board,
+    #game-board-container.blur-game #winning-line {
+      filter: blur(5px);
+      pointer-events: none;
+      transition: filter 0.5s ease-out;
+    }
+    
+    /* Restart Overlay (Sits above the blur effect in the center) */
+    #restart-overlay {
+        z-index: 100; 
+        pointer-events: none; 
+        /* Positioned over the entire game screen area, not just the board */
+        position: absolute;
+        inset: 0;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    #restart-game-btn-overlay {
+        pointer-events: all; /* Make the button clickable */
+        min-width: 200px; /* Ensure button is wide enough */
+    }
+
+    /* Language Switcher Button */
+    #lang-switch-btn {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        background: #333;
+        color: #e0e0e0;
+        padding: 0.5rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        z-index: 20; /* Above app container */
+    }
+    #lang-switch-btn:hover {
+        background: #444;
+    }
+
+    /* Style for the grid container itself to define spacing */
+    #game-board {
+        gap: 12px; 
+        position: relative; 
+        z-index: 10;
+        padding: 10px;
+        /* **إصلاح إضافي:** تحديد عرض ثابت (أو شبه ثابت) للوحة لضمان أن المربعات المجاورة لا تضغط على بعضها */
+        width: 100%; /* تأكد من أنه يملأ العرض المتاح له */
+        max-width: 380px; /* تحديد أقصى عرض ليكون مربعًا ومناسبًا للهاتف */
+    }
+    
+    /* --- WINNING LINE STYLES --- */
+    #winning-line {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        z-index: 15; 
+    }
+    .win-line {
+        position: absolute;
+        border-radius: 5px;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+        box-shadow: 0 0 15px currentColor;
+    }
+    .win-line-active {
+        opacity: 1;
+        animation: neon-pulse 1s ease-in-out infinite alternate;
+    }
+    
+    /* Keyframes for the Neon Pulse effect */
+    @keyframes neon-pulse {
+        from { opacity: 0.6; }
+        to { opacity: 1; }
+    }
+    
+    /* --- FIX: TITLE WRAPPING ISSUE --- */
+    /* ضمان بقاء العنوان في سطر واحد حتى على الشاشات الصغيرة */
+    .menu-title-fix {
+        font-size: 1.5rem; /* تصغير حجم الخط قليلاً للجوال */
+        line-height: 1.2;
+        /* استخدام flexbox لمنع التفاف الكلمات إن أمكن، وتصغير الخط هو الحل الأفضل */
+    }
+    /* على الشاشات الأكبر (مثلاً التابلت)، يمكن العودة للحجم الأصلي */
+    @media (min-width: 640px) { 
+        .menu-title-fix {
+            font-size: 2rem;
+        }
+    }
+    
+  </style>
+</head>
+<body class="p-4">
+
+  <!-- --- VIDEO BACKGROUND (Space/Nebula/Planets) --- -->
+  <video autoplay muted loop id="video-background">
+      <source src="https://assets.mixkit.co/videos/preview/mixkit-nebula-and-planet-in-outer-space-40615-large.mp4" type="video/mp4">
+      <!-- Fallback image if video fails -->
+  </video>
+  <div id="video-overlay"></div>
+  <!-- ------------------------ -->
+
+  <!-- Language Switcher (Top Left) -->
+  <button id="lang-switch-btn" data-lang="ar">
+    <span id="lang-flag">🇮🇶</span> <span id="lang-text">العربية</span>
+  </button>
+
+  <!-- Main App Container -->
+  <div id="app" class="w-full max-w-sm mx-auto p-6 rounded-2xl shadow-2xl relative">
+    
+    <!-- LOADING SCREEN -->
+    <div id="loading-screen" class="flex flex-col items-center justify-center h-80 text-center">
+      <i class="ph ph-circle-notch animate-spin text-4xl text-gray-400"></i>
+      <p class="mt-4 text-gray-400" data-ar="جاري الاتصال بالنظام..." data-en="Connecting to the system..."></p>
+    </div>
+
+    <!-- MAIN MENU SCREEN -->
+    <div id="menu-screen" class="hidden text-center">
+      <!-- FIX: تم تعديل الهيكلة وتصغير حجم الخط قليلاً لضمان بقاء العنوان في سطر واحد -->
+      <h1 class="text-3xl font-extrabold mb-10 text-white leading-tight menu-title-fix">
+        <span data-ar="العب X O مع علي بشار" data-en="Play X O, With Ali Bashar" class="inline-block whitespace-nowrap">
+          <span data-ar="العب X O مع" data-en="Play X O, With" class="inline-block">العب X O مع</span> 
+          <span class="marker-X inline-block">Ali Bashar</span>
+        </span>
+      </h1>
+      
+      <div class="flex flex-col space-y-4 menu-buttons">
+        <button id="start-game-btn" class="game-button w-full px-6 py-4 rounded-xl text-lg font-bold">
+          <span data-ar="بدء لعبة جديدة" data-en="Start New Game">بدء لعبة جديدة</span> <i class="ph ph-sword ml-2"></i>
+        </button>
+        <button id="account-btn" class="game-button w-full px-6 py-4 rounded-xl text-lg font-bold">
+          <span class="text-white" data-ar="رصيد النجوم والإحصائيات" data-en="Star Balance & Stats">رصيد النجوم والإحصائيات</span> <i class="ph ph-star-fill marker-X mr-2"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- GAME SCREEN -->
+    <div id="game-screen" class="hidden relative">
+      <div id="game-status-bar" class="text-center mb-4 p-2 rounded-xl bg-[#2a2a2a] border border-[#333]">
+        <p class="text-lg font-semibold text-[#e0e0e0]">
+          <span id="turn-display"></span>
+        </p>
+      </div>
+      
+      <div id="game-board-container" class="relative transition-all duration-500">
+        <!-- Game Board (The only part that blurs) -->
+        <div id="game-board" class="grid grid-cols-3 aspect-square max-w-sm mx-auto transition-all duration-500">
+          <!-- Winning Line Container -->
+          <div id="winning-line" class="absolute inset-0"></div>
+          <!-- Cells will be generated by JS -->
+        </div>
+      </div>
+      
+      <!-- GAME CONTROL BUTTONS (Updated per request) -->
+      <div id="game-control-buttons" class="mt-6 space-y-3 transition-all duration-500">
+          <!-- 1. زر إنهاء اللعبة (End Game) -->
+          <button id="end-game-btn" class="game-button w-full px-6 py-3 rounded-xl text-lg font-bold bg-gray-600 border-gray-500 text-white" style="box-shadow: 0 4px #444; border-color: #555;">
+              <span data-ar="إنهاء اللعبة" data-en="End Game">إنهاء اللعبة</span>
+          </button>
+          
+          <!-- 2. زر إعادة اللعبة (Restart Game) -->
+          <button id="restart-game-btn-controls" class="game-button w-full px-6 py-3 rounded-xl text-lg font-bold">
+              <span data-ar="إعادة اللعبة" data-en="Restart Game">إعادة اللعبة</span>
+          </button>
+      </div>
+      
+      <!-- Restart Overlay (Appears in center of the game screen after game ends) -->
+      <!-- FIX: يجب أن تكون مخفية بشكل افتراضي لمنع الظهور الخاطئ قبل نهاية اللعبة -->
+      <div id="restart-overlay" class="hidden absolute inset-0 flex flex-col justify-center items-center rounded-lg pointer-events-none">
+          <button id="restart-game-btn-overlay" class="game-button px-8 py-4 rounded-xl text-xl font-bold">
+            <span data-ar="إعادة اللعبة" data-en="Restart Game">إعادة اللعبة</span>
+          </button>
+      </div>
+    </div>
+
+    <!-- ACCOUNT SCREEN -->
+    <div id="account-screen" class="hidden">
+      <h2 class="text-2xl font-bold mb-6 text-center text-white" data-ar="رصيد النجوم" data-en="Star Balance">رصيد النجوم</h2>
+      
+      <div class="bg-[#2a2a2a] p-4 rounded-xl space-y-4 border border-[#333]">
+        <!-- Stars Balance -->
+        <div class="flex justify-between items-center p-3 bg-[#333] rounded-lg shadow-inner shadow-black/30">
+          <span class="text-lg font-semibold" data-ar="رصيدك الحالي:" data-en="Current Balance:">رصيدك الحالي:</span>
+          <span id="account-stars" class="text-2xl font-bold marker-X flex items-center">0 <i class="ph ph-star-fill text-2xl mr-1"></i></span>
+        </div>
+
+        <!-- Stats -->
+        <div class="flex justify-between items-center p-3 bg-[#333] rounded-lg">
+          <span class="text-lg font-semibold" data-ar="عدد الفوز (ضد Ali Bashar):" data-en="Wins (vs Ali Bashar):">عدد الفوز (ضد Ali Bashar):</span>
+          <span id="account-wins" class="text-xl font-bold text-[#00ff73]">0</span>
+        </div>
+        <div class="flex justify-between items-center p-3 bg-[#333] rounded-lg">
+          <span class="text-lg font-semibold" data-ar="عدد الخسارة:" data-en="Losses:">عدد الخسارة:</span>
+          <span id="account-losses" class="text-xl font-bold text-[#ff4500]">0</span>
+        </div>
+        <div class="flex justify-between items-center p-3 bg-[#333] rounded-lg">
+          <span class="text-lg font-semibold" data-ar="عدد التعادل:" data-en="Draws:">عدد التعادل:</span>
+          <span id="account-draws" class="text-xl font-bold text-gray-400">0</span>
+        </div>
+
+        <!-- Dates -->
+        <div class="text-sm text-gray-400 pt-4 border-t border-gray-700 space-y-2">
+          <p><span data-ar="تاريخ أول لعبة:" data-en="First Game:">تاريخ أول لعبة:</span> <span id="account-first-game" class="font-mono">N/A</span></p>
+          <p><span data-ar="تاريخ آخر لعبة:" data-en="Last Game:">تاريخ آخر لعبة:</span> <span id="account-last-game" class="font-mono">N/A</span></p>
+        </div>
+      </div>
+      
+      <button id="back-to-menu-btn" class="game-button w-full mt-6 px-6 py-3 rounded-xl text-lg font-bold">
+        <span data-ar="العودة للقائمة الرئيسية" data-en="Back to Main Menu">العودة للقائمة الرئيسية</span>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- RESULT TOAST (Floating Notification) -->
+  <div id="result-toast" class="text-center" style="display: none;">
+    <h3 id="toast-title" class="text-2xl font-bold mb-1"></h3>
+    <p id="toast-message" class="text-lg text-gray-200"></p>
+  </div>
+
+
+  <script type="module">
+    // --- Localization Data (Updated Ali Bashar Name) ---
+    const i18n = {
+        ar: {
+            loading: "جاري الاتصال بالنظام...",
+            title: "العب X O مع علي بشار", // Updated
+            start: "بدء لعبة جديدة",
+            stats: "رصيد النجوم والإحصائيات",
+            current_balance: "رصيدك الحالي:",
+            wins: "عدد الفوز (ضد علي بشار):",
+            losses: "عدد الخسارة:",
+            draws: "عدد التعادل:",
+            first_game: "تاريخ أول لعبة:",
+            last_game: "تاريخ آخر لعبة:",
+            back_to_menu: "العودة للقائمة الرئيسية",
+            end_game: "إنهاء اللعبة", 
+            restart_game: "إعادة اللعبة", 
+            turn_you: "دورك (X)",
+            turn_ali: "دور علي بشار (O)",
+            win_title: "تهانينا! فزت!",
+            win_message: "تمت إضافة 1 نجمة لرصيدك.",
+            lose_title: "خسرت!",
+            lose_message: "تم خصم 1 نجمة من رصيدك.",
+            draw_title: "تعادل",
+            draw_message: "انتهت اللعبة بالتعادل.",
+            star_balance: "رصيد النجوم"
+        },
+        en: {
+            loading: "Connecting to the system...",
+            title: "Play X O, With Ali Bashar", // Updated
+            start: "Start New Game",
+            stats: "Star Balance & Stats",
+            current_balance: "Current Balance:",
+            wins: "Wins (vs Ali Bashar):",
+            losses: "Losses:",
+            draws: "Draws:",
+            first_game: "First Game:",
+            last_game: "Last Game:",
+            back_to_menu: "Back to Main Menu",
+            end_game: "End Game", 
+            restart_game: "Restart Game", 
+            turn_you: "Your turn (X)",
+            turn_ali: "Ali Bashar's turn (O)",
+            win_title: "Congratulations! You Win!",
+            win_message: "1 star added to your balance.",
+            lose_title: "You Lost!",
+            lose_message: "1 star deducted from your balance.",
+            draw_title: "Draw",
+            draw_message: "The game ended in a draw.",
+            star_balance: "Star Balance"
+        }
+    };
+    
+    // Global Firebase and State Variables
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+    let db, auth, userId;
+    let statsRef;
+    let currentLang = localStorage.getItem('appLang') || 'ar'; 
+
+    // Game State
+    let board = ['', '', '', '', '', '', '', '', ''];
+    let currentPlayer = 'X'; // User starts first
+    let isGameActive = false;
+    let isGameOver = false;
+
+    // User Data State
+    let userStats = {
+      stars: 0,
+      wins: 0,
+      losses: 0,
+      draws: 0,
+      firstGameDate: 'N/A',
+      lastGameDate: 'N/A'
+    };
+
+    // DOM Elements
+    const screens = {
+      loading: document.getElementById('loading-screen'),
+      menu: document.getElementById('menu-screen'),
+      game: document.getElementById('game-screen'),
+      account: document.getElementById('account-screen')
+    };
+    const boardEl = document.getElementById('game-board');
+    const turnDisplay = document.getElementById('turn-display');
+    const restartOverlay = document.getElementById('restart-overlay');
+    const gameBoardContainer = document.getElementById('game-board-container');
+    const gameControlButtons = document.getElementById('game-control-buttons'); // New
+    const resultToast = document.getElementById('result-toast');
+    const toastTitle = document.getElementById('toast-title');
+    const toastMessage = document.getElementById('toast-message');
+    const langSwitchBtn = document.getElementById('lang-switch-btn');
+    const langFlagEl = document.getElementById('lang-flag');
+    const langTextEl = document.getElementById('lang-text');
+    const winningLineEl = document.getElementById('winning-line');
+    
+    // Control Buttons
+    const restartOverlayBtn = document.getElementById('restart-game-btn-overlay');
+    const restartControlsBtn = document.getElementById('restart-game-btn-controls');
+    const endGameBtn = document.getElementById('end-game-btn');
+
+
+    // Colors for winning line
+    const WIN_COLOR = '#00ff73'; // Neon Green for User (X)
+    const LOSE_COLOR = '#ff4500'; // Orange Red for Ali (O)
+
+    // --- Localization Functions ---
+
+    function setLanguage(lang) {
+        currentLang = lang;
+        localStorage.setItem('appLang', lang);
+        
+        // Update flags and text in the button
+        if (lang === 'ar') {
+            document.documentElement.lang = 'ar';
+            document.documentElement.dir = 'rtl';
+            langFlagEl.textContent = '🇮🇶';
+            langTextEl.textContent = 'العربية';
+        } else {
+            document.documentElement.lang = 'en';
+            document.documentElement.dir = 'ltr';
+            langFlagEl.textContent = '🇺🇸';
+            langTextEl.textContent = 'USA';
+        }
+
+        // Update all data-lang elements
+        document.querySelectorAll('[data-ar]').forEach(el => {
+            const arText = el.getAttribute('data-ar');
+            const enText = el.getAttribute('data-en');
+            el.textContent = (lang === 'ar' ? arText : enText);
+        });
+        
+        // Update dynamic content (like turn display)
+        updateTurnDisplay();
+        updateAccountScreen();
+    }
+
+    function toggleLanguage() {
+        setLanguage(currentLang === 'ar' ? 'en' : 'ar');
+    }
+
+    function updateTurnDisplay() {
+        if (currentPlayer === 'X') {
+            turnDisplay.textContent = i18n[currentLang].turn_you;
+        } else if (currentPlayer === 'O') {
+            turnDisplay.textContent = i18n[currentLang].turn_ali;
+        }
+    }
+
+
+    // Utility to format date
+    const formatDate = (timestamp) => {
+      if (timestamp === 'N/A' || !timestamp) return 'N/A';
+      try {
+        const date = new Date(timestamp);
+        // Use English locale for consistent date format regardless of app language
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      } catch (e) {
+        return timestamp;
+      }
+    };
+
+    // --- FIREBASE AND STATE MANAGEMENT ---
+
+    async function initializeFirebase() {
+      try {
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        auth = getAuth(app);
+        
+        await setPersistence(auth, browserLocalPersistence);
+
+        onAuthStateChanged(auth, async (user) => {
+          if (user) {
+            userId = user.uid;
+            // FIX: Using correct statsRef path
+            statsRef = doc(db, `/artifacts/${appId}/users/${userId}/tictactoe/stats`);
+            loadStats();
+          } else {
+            // Sign in anonymously if no token or user exists
+            const customToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+            if (customToken) {
+              await signInWithCustomToken(auth, customToken);
+            } else {
+              await signInAnonymously(auth);
+            }
+          }
+        });
+
+      } catch (error) {
+        console.error("Firebase Initialization Error:", error);
+        showScreen('menu'); 
+      }
+    }
+
+    function loadStats() {
+      onSnapshot(statsRef, (docSnap) => {
+        if (docSnap.exists()) {
+          userStats = docSnap.data();
+        } else {
+          userStats = {
+            stars: 0, wins: 0, losses: 0, draws: 0, firstGameDate: 'N/A', lastGameDate: 'N/A'
+          };
+        }
+        updateAccountScreen();
+        showScreen('menu'); 
+      }, (error) => {
+        console.error("Firestore Snapshot Error:", error);
+        showScreen('menu'); 
+      });
+    }
+
+    async function updateStats(result) {
+      const now = new Date().toISOString();
+      const isNewUser = userStats.firstGameDate === 'N/A';
+      
+      let starsChange = 0;
+      if (result === 'X') { // User Win: +1 Star
+        starsChange = 1;
+        userStats.wins++;
+      } else if (result === 'O') { // Ali Win: -1 Star
+        starsChange = -1;
+        userStats.losses++;
+      } else { // Draw: 0 Change
+        userStats.draws++;
+      }
+
+      userStats.stars = (userStats.stars || 0) + starsChange;
+      userStats.lastGameDate = now;
+      if (isNewUser) {
+        userStats.firstGameDate = now;
+      }
+
+      try {
+        if (isNewUser) {
+          await setDoc(statsRef, userStats);
+        } else {
+          await updateDoc(statsRef, userStats);
+        }
+        updateAccountScreen();
+      } catch (e) {
+        console.error("Error updating stats:", e);
+      }
+    }
+
+    function updateAccountScreen() {
+      const starsEl = document.getElementById('account-stars');
+      
+      // Update star balance display
+      starsEl.innerHTML = `${userStats.stars} <i class="ph ph-star-fill text-2xl ${currentLang === 'ar' ? 'mr-1' : 'ml-1'}"></i>`;
+      
+      // Update color based on balance
+      starsEl.classList.remove('marker-X', 'marker-O', 'text-gray-400');
+      if (userStats.stars > 0) {
+        starsEl.classList.add('marker-X');
+      } else if (userStats.stars < 0) {
+        starsEl.classList.add('marker-O');
+      } else {
+        starsEl.classList.add('text-gray-400');
+      }
+      
+      document.getElementById('account-wins').textContent = userStats.wins;
+      document.getElementById('account-losses').textContent = userStats.losses;
+      document.getElementById('account-draws').textContent = userStats.draws;
+      document.getElementById('account-first-game').textContent = formatDate(userStats.firstGameDate);
+      document.getElementById('account-last-game').textContent = formatDate(userStats.lastGameDate);
+    }
+
+    function showScreen(screenName) {
+      Object.values(screens).forEach(el => el.classList.add('hidden'));
+      if (screens[screenName]) {
+        screens[screenName].classList.remove('hidden');
+      }
+      if (screenName !== 'game') {
+        isGameActive = false;
+        isGameOver = false; // Reset game state
+        // Clear all game-end effects
+        gameBoardContainer.classList.remove('blur-game');
+        gameControlButtons.classList.remove('blur-controls');
+        // FIX: التأكد من إخفاء هذا الزر دائماً عند الخروج من شاشة اللعبة
+        restartOverlay.classList.add('hidden'); 
+        clearWinningLine();
+      }
+      // Update direction for new screen
+      if (currentLang === 'ar') {
+        document.documentElement.dir = 'rtl';
+      } else {
+        document.documentElement.dir = 'ltr';
+      }
+    }
+
+    // --- GAME LOGIC ---
+
+    const winningConditions = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+      [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+      [0, 4, 8], [2, 4, 6]            // Diagonals
+    ];
+
+    function checkWin(currentBoard) {
+      for (let i = 0; i < winningConditions.length; i++) {
+        const [a, b, c] = winningConditions[i];
+        if (currentBoard[a] && currentBoard[a] === currentBoard[b] && currentBoard[a] === currentBoard[c]) {
+          return { winner: currentBoard[a], combo: winningConditions[i] }; 
+        }
+      }
+      if (!currentBoard.includes('')) {
+        return { winner: 'Draw', combo: null };
+      }
+      return { winner: null, combo: null };
+    }
+
+    function handleMove(clickedCellIndex) {
+      if (!isGameActive || board[clickedCellIndex] !== '' || isGameOver) return;
+
+      // User Move (X)
+      board[clickedCellIndex] = 'X';
+      // تم التأكد من أن حجم الرمز لا يغير حجم المربع
+      document.getElementById(`cell-${clickedCellIndex}`).innerHTML = `<span class="marker-X">X</span>`;
+      
+      let { winner, combo } = checkWin(board);
+      if (winner) return gameEnd(winner, combo); 
+      
+      currentPlayer = 'O';
+      updateTurnDisplay();
+      isGameActive = false; 
+      
+      // Ali's move after a short delay
+      setTimeout(robotMove, 700);
+    }
+
+    // --- SMART AI (Minimax Algorithm) ---
+    
+    const scores = {
+      X: -10, // Minimizer
+      O: 10,  // Maximizer
+      Draw: 0
+    };
+
+    function minimax(newBoard, player) {
+      const { winner } = checkWin(newBoard);
+      if (winner) {
+        return { score: scores[winner] };
+      }
+
+      const availSpots = newBoard.map((val, i) => val === '' ? i : -1).filter(i => i !== -1);
+      const moves = [];
+
+      for (let i = 0; i < availSpots.length; i++) {
+        const move = {};
+        const index = availSpots[i];
+        move.index = index;
+        newBoard[index] = player;
+
+        if (player === 'O') { // Ali (Maximizer)
+          const score = minimax(newBoard, 'X').score;
+          move.score = score;
+        } else { // User (Minimizer)
+          const score = minimax(newBoard, 'O').score;
+          move.score = score;
+        }
+
+        newBoard[index] = ''; // Reset the spot
+        moves.push(move);
+      }
+
+      let bestMove = 0;
+      if (player === 'O') {
+        let bestScore = -Infinity;
+        for (let i = 0; i < moves.length; i++) {
+          if (moves[i].score > bestScore) {
+            bestScore = moves[i].score;
+            bestMove = i;
+          }
+        }
+      } else {
+        let bestScore = Infinity;
+        for (let i = 0; i < moves.length; i++) {
+          if (moves[i].score < bestScore) {
+            bestScore = moves[i].score;
+            bestMove = i;
+          }
+        }
+      }
+
+      return moves[bestMove];
+    }
+
+    function robotMove() {
+      const availSpots = board.map((val, i) => val === '' ? i : -1).filter(i => i !== -1);
+      
+      if (availSpots.length === 0) return gameEnd('Draw', null);
+
+      // Simple AI fallback for the first move if center is taken (to speed up game)
+      let bestSpot = -1;
+      if (availSpots.length === 8 && board[4] === 'X') {
+          // If user took center, prioritize corners (0, 2, 6, 8)
+          const corners = [0, 2, 6, 8].filter(i => board[i] === '');
+          bestSpot = corners[Math.floor(Math.random() * corners.length)];
+      }
+      
+      if (bestSpot === -1) {
+        // Use Minimax for other moves
+        bestSpot = minimax(board, 'O').index;
+      }
+
+      // Ali Move (O)
+      board[bestSpot] = 'O';
+      // تم التأكد من أن حجم الرمز لا يغير حجم المربع
+      document.getElementById(`cell-${bestSpot}`).innerHTML = `<span class="marker-O">O</span>`;
+
+      let { winner, combo } = checkWin(board);
+      if (winner) return gameEnd(winner, combo); 
+
+      currentPlayer = 'X';
+      updateTurnDisplay();
+      isGameActive = true;
+    }
+    
+    // --- WINNING LINE DRAWING LOGIC ---
+
+    function drawWinningLine(combo, winner) {
+      const color = winner === 'X' ? WIN_COLOR : LOSE_COLOR;
+      
+      // Clear previous lines
+      clearWinningLine();
+      
+      // Get the bounding box of the entire game board
+      const boardRect = boardEl.getBoundingClientRect();
+
+      // Calculate center points of the winning cells
+      const centers = combo.map(i => {
+        const cell = document.getElementById(`cell-${i}`);
+        const rect = cell.getBoundingClientRect();
+        return {
+          // Calculate center relative to the board container
+          x: rect.left + rect.width / 2 - boardRect.left,
+          y: rect.top + rect.height / 2 - boardRect.top
+        };
+      });
+
+      // We only care about the start (index 0) and end (index 2) cells for the line
+      const start = centers[0];
+      const end = centers[2];
+
+      // Calculate line properties
+      const dx = end.x - start.x;
+      const dy = end.y - start.y;
+      const length = Math.sqrt(dx * dx + dy * dy) + 20; // +20 for overshoot
+      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+      // Create the line element
+      const line = document.createElement('div');
+      line.classList.add('win-line', 'win-line-active');
+      line.style.cssText = `
+        background-color: ${color};
+        transform: rotate(${angle}deg);
+        width: ${length}px;
+        height: 10px;
+        left: ${start.x}px;
+        top: ${start.y}px;
+        transform-origin: 0% 0%;
+      `;
+      winningLineEl.appendChild(line);
+      
+      // Set the color for the line container too for shadow effects
+      winningLineEl.style.color = color;
+    }
+    
+    function clearWinningLine() {
+        winningLineEl.innerHTML = '';
+        winningLineEl.style.color = '';
+    }
+
+    // --- GAME END FLOW ---
+
+    function gameEnd(winner, combo) {
+      isGameActive = false;
+      isGameOver = true;
+      let title, message, bgColor, borderColor;
+      
+      // Draw the winning line first
+      if (combo) {
+        drawWinningLine(combo, winner);
+      }
+      
+      if (winner === 'X') {
+        title = i18n[currentLang].win_title;
+        message = i18n[currentLang].win_message;
+        bgColor = '#006400'; 
+        borderColor = WIN_COLOR; // Green border for win
+        updateStats('X');
+      } else if (winner === 'O') {
+        title = i18n[currentLang].lose_title;
+        message = i18n[currentLang].lose_message;
+        bgColor = '#8b0000'; 
+        borderColor = LOSE_COLOR; // Red border for lose
+        updateStats('O');
+      } else { // Draw
+        title = i18n[currentLang].draw_title;
+        message = i18n[currentLang].draw_message;
+        bgColor = '#333333'; 
+        borderColor = '#e0e0e0';
+        updateStats('Draw');
+      }
+      
+      // 1. Prepare and Show the result Toast
+      toastTitle.textContent = title;
+      toastMessage.textContent = message;
+      resultToast.style.backgroundColor = bgColor;
+      resultToast.style.borderColor = borderColor;
+      resultToast.style.display = 'block'; 
+      
+      // Delay before starting the smooth fade and blur
+      setTimeout(() => {
+        // Fade in (0.4s)
+        resultToast.style.opacity = 1;
+        // Start smooth blur on the board container and controls (0.5s)
+        gameBoardContainer.classList.add('blur-game');
+        gameControlButtons.classList.add('blur-controls'); // Apply blur to controls
+      }, 50); 
+
+      // 2. Fade out after 1.2 seconds of full visibility
+      setTimeout(() => {
+        resultToast.style.opacity = 0;
+      }, 50 + 1200);
+
+      // 3. Hide toast and show restart button after fade transition (1.2s + 0.4s transition)
+      setTimeout(() => {
+        resultToast.style.display = 'none';
+        // Show the single center restart button
+        // FIX: هذا هو الإجراء الذي يظهر زر إعادة اللعبة في المنتصف
+        restartOverlay.classList.remove('hidden'); 
+      }, 50 + 1200 + 400); 
+    }
+    
+    // --- INITIALIZATION ---
+
+    function startGame() {
+      board = ['', '', '', '', '', '', '', '', ''];
+      currentPlayer = 'X';
+      isGameActive = true;
+      isGameOver = false;
+      showScreen('game');
+      updateTurnDisplay(); // Set initial turn text
+      
+      // Clear all game-end effects
+      gameBoardContainer.classList.remove('blur-game');
+      gameControlButtons.classList.remove('blur-controls'); // Remove blur from controls
+      restartOverlay.classList.add('hidden'); // التأكد من إخفائه عند بدء اللعبة
+      clearWinningLine(); // Ensure the line is cleared
+      
+      // Clear board visually
+      for (let i = 0; i < 9; i++) {
+        document.getElementById(`cell-${i}`).innerHTML = '';
+      }
+    }
+    
+    // Function to handle game reset from any button
+    function handleGameRestart(event) {
+        event.preventDefault(); 
+        startGame();
+    }
+    
+    // Function to handle ending game and returning to menu
+    function handleGameEnd(event) {
+        event.preventDefault(); 
+        showScreen('menu'); // Return to the main menu screen
+    }
+
+    function generateBoard() {
+      boardEl.innerHTML = '<div id="winning-line" class="absolute inset-0"></div>'; // Ensure line container is generated first
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.id = `cell-${i}`;
+        cell.classList.add('cell');
+        cell.addEventListener('click', () => handleMove(i));
+        boardEl.appendChild(cell);
+      }
+      // Re-assign winningLineEl since we rebuilt boardEl.innerHTML
+      window.winningLineEl = document.getElementById('winning-line');
+    }
+    
+
+    // --- EVENT LISTENERS ---
+    
+    document.getElementById('start-game-btn').addEventListener('click', startGame);
+    document.getElementById('account-btn').addEventListener('click', () => showScreen('account'));
+    document.getElementById('back-to-menu-btn').addEventListener('click', () => showScreen('menu'));
+    
+    // Restart listeners 
+    restartOverlayBtn.addEventListener('click', handleGameRestart); // The center button after win/lose/draw
+    restartControlsBtn.addEventListener('click', handleGameRestart); // The button in the main game controls area
+    
+    // End Game listener
+    endGameBtn.addEventListener('click', handleGameEnd);
+
+    langSwitchBtn.addEventListener('click', toggleLanguage);
+
+    // 1. Generate the visual board structure
+    generateBoard();
+
+    // 2. Initialize Language (must run before Firebase tries to update text)
+    setLanguage(currentLang);
+
+    // 3. Initialize Firebase and load user stats
+    initializeFirebase();
+    
+    if (typeof window.Telegram === 'undefined') {
+        console.warn("Telegram Web App environment not detected.");
+    } else {
+        window.Telegram.WebApp.ready();
+        window.Telegram.WebApp.expand();
+    }
+
+  </script>
+</body>
+</html>
+
