@@ -1,1149 +1,589 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لعبة إكس أو مع علي بشار</title>
-  
-  <!-- Load Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Load Phosphor Icons (أيقونات جميلة) -->
-  <script src="https://unpkg.com/@phosphor-icons/web"></script>
-  
-  <style>
-    /* ------------------------------------- */
-    /* 1. Global & Background Styles         */
-    /* ------------------------------------- */
-    body {
-      color: #e0e0e0;
-      font-family: 'Tahoma', 'Inter', sans-serif; 
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 1rem;
-      background-color: #000;
-      position: relative;
-      overflow-x: hidden; /* لمنع ظهور شريط التمرير الأفقي */
-    }
-
-    /* فيديو الخلفية والطبقة الشفافة */
-    #video-background {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
-      z-index: -2; 
-    }
-    
-    #video-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background-color: rgba(0, 0, 0, 0.65); /* زيادة التعتيم لتركيز أفضل */
-      z-index: -1; 
-    }
-
-    /* ------------------------------------- */
-    /* 2. Main App Card & Responsiveness     */
-    /* ------------------------------------- */
-    #app {
-        background-color: rgba(15, 15, 15, 0.98); 
-        border: 1px solid #333;
-        position: relative;
-        z-index: 10;
-        display: flex;
-        flex-direction: column;
-        min-height: 90vh; 
-        max-height: 100vh;
-        justify-content: space-between; /* لتحسين التوزيع العمودي */
-        width: 100%;
-        max-width: 400px;
-        padding-bottom: 2rem; /* مسافة سفلية للأمان */
-    }
-
-    /* Title Fix for Arabic Wrapping */
-    .menu-title-fix {
-        font-size: 2rem;
-        line-height: 1.2;
-    }
-    @media (max-width: 350px) { 
-        .menu-title-fix {
-            font-size: 1.5rem;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جرب حظك - شحن رسمي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* الخط الأساسي وتأثير الإضاءة المحيطة - يستخدم خطوط iOS افتراضياً */
+        :root {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            background: linear-gradient(135deg, #1f2937, #000000, #1f2937);
         }
-    }
-
-    /* ------------------------------------- */
-    /* 3. Game Element Styles                */
-    /* ------------------------------------- */
-    .game-button {
-      transition: all 0.2s cubic-bezier(0.2, 0.8, 0.5, 1); /* Curved transition */
-      background-color: #2a2a2a; 
-      border: 2px solid #00ff73;
-      color: #00ff73; 
-      box-shadow: 0 5px #00a04d; /* ظل أعمق */
-      font-weight: bold;
-    }
-
-    .game-button:hover {
-      background-color: #333;
-      box-shadow: 0 2px #00a04d;
-      transform: translateY(3px);
-    }
-    .game-button:active {
-        box-shadow: none;
-        transform: translateY(5px);
-    }
-    
-    /* Board Cell Styling */
-    .cell {
-      background-color: #1c1c1c; 
-      border: none;
-      box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.8), 
-                  inset -2px -2px 5px rgba(60, 60, 60, 0.2);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      aspect-ratio: 1 / 1; 
-      cursor: pointer;
-      user-select: none;
-      transition: background-color 0.2s ease, transform 0.1s ease;
-      border-radius: 15px; 
-      overflow: hidden; 
-      position: relative; 
-    }
-
-    .cell:not(.disabled):hover {
-        background-color: #252525;
-    }
-    .cell.disabled {
-        cursor: default;
-    }
-
-    /* Custom X and O styles */
-    .marker-X, .marker-O {
-      font-size: 3.5rem; /* حجم أكبر */
-      line-height: 1; 
-      font-weight: 900;
-      user-select: none;
-      display: inline-block; 
-      transform: translateY(0); 
-    }
-    
-    .marker-X {
-      color: #00ff73; 
-      text-shadow: 0 0 15px rgba(0, 255, 115, 0.9);
-    }
-    
-    .marker-O {
-      color: #ff4500; 
-      text-shadow: 0 0 15px rgba(255, 69, 0, 0.9);
-    }
-    
-    /* ------------------------------------- */
-    /* 4. Game Over & Line Styles            */
-    /* ------------------------------------- */
-    
-    /* Blur Effect for Game End */
-    .blur-target {
-        filter: blur(4px) grayscale(50%);
-        pointer-events: none;
-        user-select: none;
-        opacity: 0.5;
-        transition: all 0.5s ease;
-    }
-
-    /* Result Toast Styling */
-    #result-toast {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      padding: 1.5rem 3rem;
-      border-radius: 12px;
-      box-shadow: 0 0 40px rgba(0, 0, 0, 0.9);
-      opacity: 0;
-      transition: opacity 0.3s ease-in-out; 
-      z-index: 9999;
-      pointer-events: none;
-      border: 3px solid;
-    }
-
-    /* Restart Overlay Styling */
-    #restart-overlay {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        background-color: rgba(0, 0, 0, 0.85); 
-        border-radius: 12px;
-        z-index: 20; 
-        opacity: 0;
-        transition: opacity 0.3s ease-in-out;
-    }
-
-    /* Winning Line */
-    #winning-line {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        top: 0;
-        left: 0;
-        pointer-events: none;
-        z-index: 15; 
-    }
-    .win-line {
-        position: absolute;
-        border-radius: 5px;
-        opacity: 0;
-        transition: opacity 0.3s ease-in-out;
-        box-shadow: 0 0 15px currentColor;
-    }
-    .win-line-active {
-        opacity: 1;
-        animation: neon-pulse 1s ease-in-out infinite alternate;
-    }
-    
-    @keyframes neon-pulse {
-        from { opacity: 0.8; }
-        to { opacity: 1; }
-    }
-  </style>
+        /* تصميم بكرة السلوت (Reel) ثلاثية الأبعاد */
+        .slot-container { 
+            perspective: 500px; 
+            height: 120px; 
+            width: 100%; 
+            overflow: hidden; 
+            border-radius: 12px; 
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.1), inset 0 0 10px rgba(0, 0, 0, 0.9); 
+        }
+        .slot-reel { 
+            transform-style: preserve-3d; 
+            /* تم تقليل مدة الانتقال للسماح للحركة بالبدء */
+            transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
+            position: relative; 
+            width: 100%; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
+        .slot-item { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            height: 120px; 
+            font-size: 3.5rem; 
+            color: #fcd34d; 
+            width: 100%; 
+            background-color: #0d1117; 
+            border-bottom: 1px solid #374151; 
+            box-sizing: border-box; 
+        }
+        /* حركة الدوران السريعة (Spinning Animation) */
+        @keyframes fast-spin { 
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-80%); } 
+        }
+        .spinning { 
+            animation: fast-spin 0.1s linear infinite; 
+        }
+        /* نمط زر الفر (Spin) */
+        .btn-spin { 
+            background: linear-gradient(145deg, #ef4444, #b91c1c); 
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6); 
+            transition: all 0.2s ease; 
+        }
+        .btn-spin:hover { 
+            transform: translateY(-3px) scale(1.02); 
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.8); 
+        }
+        .btn-spin:disabled { 
+            background: #4b5563; 
+            box-shadow: none; 
+            cursor: not-allowed; 
+            transform: none; 
+        }
+        /* رسالة الإشعار (Toast) */
+        #toast-notification { 
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out; 
+            opacity: 0; 
+            transform: translateY(100%); 
+            z-index: 1000; 
+        }
+        .toast-visible { 
+            opacity: 1 !important; 
+            transform: translateY(0) !important; 
+        }
+        .game-area-glow { 
+            box-shadow: 0 0 50px rgba(253, 224, 71, 0.2), 0 0 100px rgba(253, 224, 71, 0.1); 
+        }
+        #charge-modal { 
+            opacity: 0; 
+            transition: opacity 0.3s ease; 
+        }
+        #modal-content { 
+            transform: scale(0.9); 
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+    </style>
 </head>
-<body class="p-4">
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
 
-  <!-- --- VIDEO BACKGROUND --- -->
-  <video autoplay muted loop id="video-background">
-      <source src="https://assets.mixkit.co/videos/preview/mixkit-nebula-and-planet-in-outer-space-40615-large.mp4" type="video/mp4">
-  </video>
-  <div id="video-overlay"></div>
-  <!-- ------------------------ -->
-
-  <!-- Language Switcher -->
-  <button id="lang-switch-btn" data-lang="ar" class="absolute top-4 left-4 bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-full text-sm shadow-md transition-colors duration-200 z-20">
-    <span id="lang-flag">🇮🇶</span> <span id="lang-text">العربية</span>
-  </button>
-
-  <!-- Main App Container -->
-  <div id="app" class="w-full max-w-sm mx-auto p-6 rounded-2xl shadow-2xl relative">
-    
-    <!-- LOADING SCREEN -->
-    <div id="loading-screen" class="flex flex-col items-center justify-center h-80 text-center">
-      <i class="ph ph-circle-notch animate-spin text-4xl text-gray-400"></i>
-      <p class="mt-4 text-gray-400" data-ar="جاري الاتصال بالنظام..." data-en="Connecting to the system..."></p>
-    </div>
-
-    <!-- MAIN MENU SCREEN -->
-    <div id="menu-screen" class="hidden text-center flex flex-col justify-center h-full">
-        <div>
-            <!-- Header -->
-            <h1 class="font-extrabold mb-10 text-white leading-tight menu-title-fix">
-                <span data-ar="العب X O مع علي بشار" data-en="Play X O, With Ali Bashar" class="inline-block whitespace-nowrap">
-                  <span data-ar="العب X O مع" data-en="Play X O, With">العب X O مع</span> <span class="marker-X inline-block">علي بشار</span>
-                </span>
-            </h1>
-          
-            <!-- Menu Buttons -->
-            <div class="flex flex-col space-y-4 menu-buttons">
-                <button id="start-game-btn" class="game-button w-full px-6 py-4 rounded-xl text-lg font-bold">
-                    <span data-ar="بدء لعبة جديدة" data-en="Start New Game">بدء لعبة جديدة</span> <i class="ph ph-sword ml-2"></i>
-                </button>
-                <button id="account-btn" class="game-button w-full px-6 py-4 rounded-xl text-lg font-bold">
-                    <span class="text-white" data-ar="رصيد النجوم والإحصائيات" data-en="Star Balance & Stats">رصيد النجوم والإحصائيات</span> <i class="ph ph-star-fill marker-X mr-2"></i>
-                </button>
-                
-                <!-- NEW: Leaderboard Button -->
-                <button id="leaderboard-btn" class="game-button w-full px-6 py-4 rounded-xl text-lg font-bold">
-                    <span class="text-white" data-ar="لوحة المتصدرين" data-en="Leaderboard">لوحة المتصدرين</span> <i class="ph ph-medal-fill marker-O mr-2"></i>
-                </button>
-            </div>
+    <div class="w-full max-w-md bg-gray-900 p-8 rounded-3xl shadow-2xl border-4 border-yellow-500 game-area-glow">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-black text-white">جرب حظك! 🍀</h1>
+             <button id="star-balance-button" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-extrabold py-2 px-4 rounded-full shadow-lg transition" onclick="toggleChargeModal(true)">
+                الرصيد: <span id="star-balance">0</span> ⭐
+            </button>
         </div>
-    </div>
+       
+        <p class="text-gray-400 text-center mb-6">🎰 فَر بـ 1 نجمة وافوز بـ 25 نجمة</p>
 
-    <!-- GAME SCREEN -->
-    <div id="game-screen" class="hidden relative flex-grow flex flex-col justify-center items-center">
-      <div id="game-status-bar" class="text-center mb-4 p-2 rounded-xl bg-[#2a2a2a] border border-[#333] transition-all duration-500 w-full">
-        <p class="text-lg font-semibold text-[#e0e0e0]">
-          <span id="turn-display"></span>
-        </p>
-      </div>
-      
-      <div id="game-board-container" class="relative transition-all duration-500 w-full max-w-[380px] mx-auto">
-        <!-- Game Board -->
-        <div id="game-board" class="grid grid-cols-3 aspect-square mx-auto transition-all duration-500">
-          <!-- Winning Line Container -->
-          <div id="winning-line" class="absolute inset-0"></div>
-          <!-- Cells will be generated by JS -->
+        <div class="flex justify-between items-center bg-gray-800 p-4 rounded-xl mb-6 shadow-inner border border-gray-700">
+            <div>
+                <span class="text-sm font-light text-gray-400 block">معرف المستخدم (شاركه مع البوت):</span>
+                <span id="user-id-display" class="text-xs font-mono text-blue-400 block mt-1 break-all">...</span>
+            </div>
+            <div>
+                <span class="text-sm font-light text-gray-400 block">أفضل فوز:</span>
+                <span id="high-score" class="text-xl font-bold text-red-400 block mt-1">0 ⭐</span>
+            </div>
         </div>
         
-        <!-- RESTART OVERLAY -->
-        <div id="restart-overlay" class="hidden">
-             <!-- The buttons will appear here -->
+        <div class="flex justify-around space-x-3 mb-8">
+            <div class="slot-container w-1/3"><div id="reel-1" class="slot-reel"></div></div>
+            <div class="slot-container w-1/3"><div id="reel-2" class="slot-reel"></div></div>
+            <div class="slot-container w-1/3"><div id="reel-3" class="slot-reel"></div></div>
         </div>
-      </div>
-      
-      <!-- GAME CONTROL BUTTONS -->
-      <div id="game-control-buttons" class="mt-6 space-y-3 transition-all duration-500 w-full max-w-[380px]">
-          <!-- زر إنهاء اللعبة (End Game) -->
-          <button id="end-game-btn" class="game-button w-full px-6 py-3 rounded-xl text-lg font-bold bg-gray-600 border-gray-500 text-white" style="box-shadow: 0 4px #444; border-color: #555;">
-              <span data-ar="إنهاء اللعبة والعودة للقائمة" data-en="End Game and Return to Menu">إنهاء اللعبة والعودة للقائمة</span>
-          </button>
-      </div>
-    </div>
 
-    <!-- ACCOUNT SCREEN -->
-    <div id="account-screen" class="hidden flex-grow flex flex-col justify-between">
-      <div>
-        <h2 class="text-2xl font-bold mb-6 text-center text-white" data-ar="رصيد النجوم" data-en="Star Balance">رصيد النجوم</h2>
-        
-        <div class="bg-[#2a2a2a] p-4 rounded-xl space-y-4 border border-[#333]">
-          <!-- Stars Balance -->
-          <div class="flex justify-between items-center p-3 bg-[#333] rounded-lg shadow-inner shadow-black/30">
-            <span class="text-lg font-semibold" data-ar="رصيدك الحالي:" data-en="Current Balance:">رصيدك الحالي:</span>
-            <span id="account-stars" class="text-2xl font-bold marker-X flex items-center">0 <i class="ph ph-star-fill text-2xl mr-1"></i></span>
-          </div>
-
-          <!-- Stats -->
-          <div class="flex justify-between items-center p-3 bg-[#333] rounded-lg">
-            <span class="text-lg font-semibold" data-ar="عدد الفوز (ضد علي بشار):" data-en="Wins (vs Ali Bashar):">عدد الفوز (ضد علي بشار):</span>
-            <span id="account-wins" class="text-xl font-bold text-[#00ff73]">0</span>
-          </div>
-          <div class="flex justify-between items-center p-3 bg-[#333] rounded-lg">
-            <span class="text-lg font-semibold" data-ar="عدد الخسارة:" data-en="Losses:">عدد الخسارة:</span>
-            <span id="account-losses" class="text-xl font-bold text-[#ff4500]">0</span>
-          </div>
-          <div class="flex justify-between items-center p-3 bg-[#333] rounded-lg">
-            <span class="text-lg font-semibold" data-ar="عدد التعادل:" data-en="Draws:">عدد التعادل:</span>
-            <span id="account-draws" class="text-xl font-bold text-gray-400">0</span>
-          </div>
-
-          <!-- Dates -->
-          <div class="text-sm text-gray-400 pt-4 border-t border-gray-700 space-y-2">
-            <p><span data-ar="تاريخ أول لعبة:" data-en="First Game:">تاريخ أول لعبة:</span> <span id="account-first-game" class="font-mono">N/A</span></p>
-            <p><span data-ar="تاريخ آخر لعبة:" data-en="Last Game:">تاريخ آخر لعبة:</span> <span id="account-last-game" class="font-mono">N/A</span></p>
-          </div>
+        <div id="message-area" class="text-center text-xl font-bold h-8 flex items-center justify-center mb-6">
+            <span class="text-gray-300">جاري الاتصال...</span>
         </div>
-      </div>
-      
-      <button id="back-to-menu-btn" class="game-button w-full mt-6 px-6 py-3 rounded-xl text-lg font-bold">
-        <span data-ar="العودة للقائمة الرئيسية" data-en="Back to Main Menu">العودة للقائمة الرئيسية</span>
-      </button>
-    </div>
-    
-    <!-- LEADERBOARD SCREEN (NEW) -->
-    <div id="leaderboard-screen" class="hidden flex-grow flex flex-col justify-between">
-        <div>
-            <h2 class="text-2xl font-bold mb-6 text-center text-white" data-ar="لوحة المتصدرين" data-en="Leaderboard">لوحة المتصدرين</h2>
-            <div id="leaderboard-list" class="bg-[#2a2a2a] p-4 rounded-xl border border-[#333] space-y-3">
-                 <!-- Leaderboard items will be injected here -->
-                <p class="text-gray-400 text-center" data-ar="جاري تحميل المتصدرين..." data-en="Loading Leaderboard..."></p>
-            </div>
-            
-            <div class="mt-4 text-center text-sm text-gray-400">
-                <span data-ar="نقاطك في هذه اللوحة تعتمد على رصيد نجومك." data-en="Your ranking is based on your star balance.">نقاطك في هذه اللوحة تعتمد على رصيد نجومك.</span>
-            </div>
-        </div>
-        <button id="back-to-menu-leaderboard-btn" class="game-button w-full mt-6 px-6 py-3 rounded-xl text-lg font-bold">
-            <span data-ar="العودة للقائمة الرئيسية" data-en="Back to Main Menu">العودة للقائمة الرئيسية</span>
+
+        <button id="spin-button" class="w-full py-4 text-white text-2xl font-extrabold rounded-2xl uppercase btn-spin" onclick="spinSlot()" disabled>
+            جاري تهيئة اللعبة...
         </button>
+        
+        <div class="mt-6">
+            <h3 class="text-lg font-semibold text-gray-300 mb-2 border-b border-gray-700 pb-1">سجل اللعب الأخير</h3>
+            <ul id="log-list" class="text-sm text-gray-400 space-y-1 h-20 overflow-y-auto">
+                <li class="text-center italic">لا يوجد سجل بعد...</li>
+            </ul>
+        </div>
+
     </div>
 
-  </div>
+    <div id="charge-modal" class="fixed inset-0 bg-gray-900 bg-opacity-80 backdrop-blur-sm hidden items-center justify-center z-50 p-4" style="opacity: 0;">
+        <div class="bg-gray-800 p-8 rounded-3xl w-full max-w-lg shadow-2xl border-4 border-green-500 transition-transform duration-300" id="modal-content">
+            <h2 class="text-3xl font-bold text-green-400 text-center mb-5">💸 خيارات شحن النجوم 💸</h2>
+            <p class="text-gray-300 text-center mb-6">
+                انقر على الكمية، سيتم نقلك إلى رابط الدفع. بعد الدفع، **يجب** إبلاغ البوت بمعرف المستخدم الخاص بك: 
+                <span id="modal-user-id" class="text-blue-300 font-mono break-all text-sm block mt-2">...</span>
+            </p>
+            
+            <div id="charge-options-container" class="grid grid-cols-3 gap-4">
+                </div>
+            
+            <button class="w-full mt-6 py-3 bg-gray-700 text-gray-300 rounded-xl hover:bg-gray-600 transition" onclick="toggleChargeModal(false)">
+                إغلاق النافذة
+            </button>
+        </div>
+    </div>
 
-  <!-- RESULT TOAST (Floating Notification) -->
-  <div id="result-toast" class="text-center" style="display: none;">
-    <h3 id="toast-title" class="text-2xl font-bold mb-1"></h3>
-    <p id="toast-message" class="text-lg text-gray-200"></p>
-  </div>
+    <div id="toast-notification" class="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50 p-4 bg-gray-900 text-white text-base font-medium rounded-xl shadow-2xl transition duration-500 opacity-0 transform translate-y-full">
+        </div>
+
+    <script type="module">
+        // ------------------------------------------
+        // 1. إعدادات Firebase
+        // ------------------------------------------
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // متغيرات Firebase الإلزامية في بيئة Canvas
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        // مسار بيانات المستخدم في Firestore
+        let DB_PATH = '';
+        const DB_COLLECTION = 'game_data';
+        const DB_DOCUMENT = 'slot_machine';
+
+        let db = null;
+        let auth = null;
+        let currentUserId = null;
+        let isAuthReady = false;
+        
+        // ------------------------------------------
+        // 2. حالة اللعبة والروابط الرسمية
+        // ------------------------------------------
+        let starBalance = 0;
+        let highScore = 0;
+        let playCount = 0; // *** متغير جديد لعدد المشاركات ***
+        const spinCost = 1;
+        const winAmount = 25;
+        // تم تحديث الرموز إلى إيموجيات آيفون (الأكثر شيوعاً)
+        const symbols = ['🍎', '💰', '💎', '🔔', '🍀', '🍒', '7️⃣'];
+        const winSymbol = '7️⃣';
+
+        const starLinks = [
+            { amount: 5, link: 'https://t.me/$RxpsOzzsKEggFAAAroXTcLJE0us' },
+            { amount: 10, link: 'https://t.me/$xhKz4jzsKEgiFAAA7-bW0jENam0' },
+            { amount: 15, link: 'https://t.me/$8MLAUjzsKEgkFAAAmvIl7afDebE' },
+            { amount: 25, link: 'https://t.me/$OGkpxTzsKEgmFAAAJjI6la2LS0w' },
+            { amount: 50, link: 'https://t.me/$4vbK7DzsKEgoFAAA1nL9QpnQ3gM' },
+            { amount: 75, link: 'https://t.me/$P1qaxTzsKEgqFAAAUhLMFkIZBkc' },
+            { amount: 100, link: 'https://t.me/$HSElFDzsKEgsFAAAgCp11iTuimg' },
+            { amount: 115, link: 'https://t.me/$0rQkXDzsKEguFAAA3tsBKRFKGEI' },
+            { amount: 130, link: 'https://t.me/$_U1fezzsKEgwFAAAzmp7Z0tlFAw' },
+            { amount: 150, link: 'https://t.me/$6dYohjzsKEgyFAAAWyc5eGWn3zM' },
+        ];
 
 
-  <script type="module">
-    // -------------------------------------
-    // 1. Localization Data
-    // -------------------------------------
-    const i18n = {
-        ar: {
-            loading: "جاري الاتصال بالنظام...",
-            title: "العب X O مع علي بشار", 
-            start: "بدء لعبة جديدة",
-            stats: "رصيد النجوم والإحصائيات",
-            leaderboard: "لوحة المتصدرين",
-            current_balance: "رصيدك الحالي:",
-            wins: "عدد الفوز (ضد علي بشار):",
-            losses: "عدد الخسارة:",
-            draws: "عدد التعادل:",
-            first_game: "تاريخ أول لعبة:",
-            last_game: "تاريخ آخر لعبة:",
-            back_to_menu: "العودة للقائمة الرئيسية",
-            end_game_menu: "العودة للقائمة", 
-            end_game: "إنهاء اللعبة والعودة للقائمة", 
-            restart_game: "إعادة اللعبة", 
-            turn_you: "دورك (X)",
-            turn_ali: "دور علي بشار (O)",
-            win_title: "تهانينا! فزت!",
-            win_message: "تمت إضافة 1 نجمة لرصيدك.",
-            lose_title: "خسرت!",
-            lose_message: "تم خصم 1 نجمة من رصيدك.",
-            draw_title: "تعادل",
-            draw_message: "انتهت اللعبة بالتعادل.",
-            star_balance: "رصيد النجوم",
-            user_id: "معرف المستخدم:",
-            loading_leaderboard: "جاري تحميل المتصدرين...",
-            ranking_based: "نقاطك في هذه اللوحة تعتمد على رصيد نجومك.",
-            your_rank: "ترتيبك:"
-        },
-        en: {
-            loading: "Connecting to the system...",
-            title: "Play X O, With Ali Bashar", 
-            start: "Start New Game",
-            stats: "Star Balance & Stats",
-            leaderboard: "Leaderboard",
-            current_balance: "Current Balance:",
-            wins: "Wins (vs Ali Bashar):",
-            losses: "Losses:",
-            draws: "Draws:",
-            first_game: "First Game:",
-            last_game: "Last Game:",
-            back_to_menu: "Back to Main Menu",
-            end_game_menu: "Back to Menu", 
-            end_game: "End Game and Return to Menu", 
-            restart_game: "Restart Game", 
-            turn_you: "Your turn (X)",
-            turn_ali: "Ali Bashar's turn (O)",
-            win_title: "Congratulations! You Win!",
-            win_message: "1 star added to your balance.",
-            lose_title: "You Lost!",
-            lose_message: "1 star deducted from your balance.",
-            draw_title: "Draw",
-            draw_message: "The game ended in a draw.",
-            star_balance: "Star Balance",
-            user_id: "User ID:",
-            loading_leaderboard: "Loading Leaderboard...",
-            ranking_based: "Your ranking is based on your star balance.",
-            your_rank: "Your Rank:"
-        }
-    };
-    
-    // -------------------------------------
-    // 2. Global Constants & Initialization
-    // -------------------------------------
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-    const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-    
-    // Firebase Imports (Global Access after import)
-    const { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore, doc, onSnapshot, setDoc, updateDoc, setPersistence, browserLocalPersistence, signInWithCustomToken, collection, query, getDocs } = window;
-    
-    // DOM Elements (Centralized access)
-    const DOM = {
-        screens: {
-            loading: document.getElementById('loading-screen'),
-            menu: document.getElementById('menu-screen'),
-            game: document.getElementById('game-screen'),
-            account: document.getElementById('account-screen'),
-            leaderboard: document.getElementById('leaderboard-screen')
-        },
-        board: document.getElementById('game-board'),
-        turnDisplay: document.getElementById('turn-display'),
-        restartOverlay: document.getElementById('restart-overlay'),
-        gameBoardContainer: document.getElementById('game-board-container'),
-        gameControlButtons: document.getElementById('game-control-buttons'),
-        gameStatusBar: document.getElementById('game-status-bar'),
-        resultToast: document.getElementById('result-toast'),
-        toastTitle: document.getElementById('toast-title'),
-        toastMessage: document.getElementById('toast-message'),
-        langSwitchBtn: document.getElementById('lang-switch-btn'),
-        langFlagEl: document.getElementById('lang-flag'),
-        langTextEl: document.getElementById('lang-text'),
-        winningLineEl: document.getElementById('winning-line'), 
-        leaderboardList: document.getElementById('leaderboard-list'),
+        // ------------------------------------------
+        // 3. العناصر الرئيسية في DOM
+        // ------------------------------------------
+        const balanceElement = document.getElementById('star-balance');
+        const spinButton = document.getElementById('spin-button');
+        const messageArea = document.getElementById('message-area');
+        const reels = [
+            document.getElementById('reel-1'),
+            document.getElementById('reel-2'),
+            document.getElementById('reel-3')
+        ];
+        const chargeModal = document.getElementById('charge-modal');
+        const modalContent = document.getElementById('modal-content');
+        const toastElement = document.getElementById('toast-notification');
+        const logList = document.getElementById('log-list');
+        const highScoreElement = document.getElementById('high-score');
+        const userIdDisplay = document.getElementById('user-id-display');
+        const modalUserId = document.getElementById('modal-user-id');
+        const chargeOptionsContainer = document.getElementById('charge-options-container');
 
-        // Control Buttons
-        endGameBtn: document.getElementById('end-game-btn'),
-        startGameBtn: document.getElementById('start-game-btn'),
-        accountBtn: document.getElementById('account-btn'),
-        backToMenuBtn: document.getElementById('back-to-menu-btn'),
-        leaderboardBtn: document.getElementById('leaderboard-btn'),
-        backToMenuLeaderboardBtn: document.getElementById('back-to-menu-leaderboard-btn'),
-    };
-    
-    const WIN_COLOR = '#00ff73'; 
-    const LOSE_COLOR = '#ff4500'; 
-    const TOAST_VISIBLE_DURATION_MS = 1500; 
+        
+        // ------------------------------------------
+        // 4. وظائف Firestore
+        // ------------------------------------------
 
-    // -------------------------------------
-    // 3. Application State (Centralized)
-    // -------------------------------------
-    class AppState {
-        constructor() {
-            this.db = null;
-            this.auth = null;
-            this.userId = null;
-            this.statsRef = null; // Doc reference for user stats
-            this.leaderboardRef = null; // Collection reference for public stats
-            this.currentLang = localStorage.getItem('appLang') || 'ar'; 
-            this.userStats = { stars: 0, wins: 0, losses: 0, draws: 0, firstGameDate: 'N/A', lastGameDate: 'N/A' };
-        }
-    }
-    const state = new AppState();
-    
-    // -------------------------------------
-    // 4. Game State Logic (Separated)
-    // -------------------------------------
-    class GameLogic {
-        constructor() {
-            this.board = Array(9).fill(''); // 3x3 board array
-            this.currentPlayer = 'X'; // X is User, O is Ali Bashar (AI)
-            this.isGameActive = false;
-            this.isGameOver = false;
-            this.winningConditions = [
-                [0, 1, 2], [3, 4, 5], [6, 7, 8], 
-                [0, 3, 6], [1, 4, 7], [2, 5, 8], 
-                [0, 4, 8], [2, 4, 6]            
-            ];
-            this.scores = { X: -10, O: 10, Draw: 0 };
+        function setupDbPath(userId) {
+            // المسار: /artifacts/{appId}/users/{userId}/game_data/slot_machine
+            DB_PATH = `artifacts/${appId}/users/${userId}/${DB_COLLECTION}/${DB_DOCUMENT}`;
+            return DB_PATH;
         }
 
-        resetGame() {
-            this.board = Array(9).fill('');
-            this.currentPlayer = 'X';
-            this.isGameActive = true;
-            this.isGameOver = false;
+        async function fetchInitialData() {
+            if (!isAuthReady || !currentUserId) return;
+
+            const userDocRef = doc(db, setupDbPath(currentUserId));
+            const docSnap = await getDoc(userDocRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                starBalance = data.balance || 0;
+                highScore = data.highScore || 0;
+                playCount = data.playCount || 0; // *** قراءة عدد المشاركات ***
+            } else {
+                await setDoc(userDocRef, { balance: 0, highScore: 0, playCount: 0, created: new Date().toISOString() });
+                starBalance = 0;
+                highScore = 0;
+                playCount = 0; // *** تهيئة عدد المشاركات ***
+            }
+
+            updateUI('تم تحميل البيانات بنجاح.');
+            setupRealtimeListener(); 
+            spinButton.disabled = starBalance < spinCost;
+            spinButton.textContent = starBalance < spinCost ? 'الرصيد 0! إضغط للشحن' : 'إبدأ الآن بـ 1 ⭐';
+            messageArea.innerHTML = '<span class="text-gray-300">جاهز للعب!</span>';
         }
 
-        checkWin(currentBoard) {
-            for (const combo of this.winningConditions) {
-                const [a, b, c] = combo;
-                if (currentBoard[a] && currentBoard[a] === currentBoard[b] && currentBoard[a] === currentBoard[c]) {
-                    return { winner: currentBoard[a], combo: combo }; 
+        function setupRealtimeListener() {
+            if (!isAuthReady || !currentUserId) return;
+
+            const userDocRef = doc(db, setupDbPath(currentUserId));
+            onSnapshot(userDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const oldBalance = starBalance;
+                    const data = docSnap.data();
+                    starBalance = data.balance || 0;
+                    highScore = data.highScore || 0;
+                    playCount = data.playCount || 0; // *** تحديث عدد المشاركات في الوقت الحقيقي ***
+                    
+                    if (starBalance > oldBalance && oldBalance !== 0) {
+                         const increase = starBalance - oldBalance;
+                         if (increase > 0) {
+                            showToast(`💰 تم الشحن بنجاح! +${increase} ⭐`, 'success');
+                            messageArea.innerHTML = `<span class="text-green-400 font-bold">شحن مكتمل! +${increase} ⭐</span>`;
+                         }
+                    }
+
+                    updateUI();
                 }
+            });
+        }
+
+        async function updateBalanceInDb(newBalance, newHighScore, newPlayCount) { // *** تحديث الدالة لقبول عدد المشاركات ***
+            if (!isAuthReady || !currentUserId) return;
+            const userDocRef = doc(db, setupDbPath(currentUserId));
+            try {
+                await setDoc(userDocRef, { 
+                    balance: newBalance,
+                    highScore: newHighScore,
+                    playCount: newPlayCount, // *** حفظ عدد المشاركات الجديد ***
+                }, { merge: true });
+            } catch (error) {
+                console.error("خطأ في تحديث Firestore:", error);
+                showToast("خطأ في حفظ البيانات. تأكد من اتصالك.", 'error');
             }
-            if (!currentBoard.includes('')) {
-                return { winner: 'Draw', combo: null };
-            }
-            return { winner: null, combo: null };
         }
         
-        // Minimax AI
-        minimax(newBoard, player) {
-            const { winner } = this.checkWin(newBoard);
-            if (winner) {
-                return { score: this.scores[winner] };
+        // ------------------------------------------
+        // 5. وظائف اللعبة
+        // ------------------------------------------
+
+        function updateUI(logMessage = null) {
+            balanceElement.textContent = `${starBalance.toLocaleString()}`;
+            highScoreElement.textContent = `${highScore.toLocaleString()} ⭐`;
+            userIdDisplay.textContent = currentUserId || 'جاري التحميل...';
+            modalUserId.textContent = currentUserId || '...';
+            
+            // تحديث زر الدوران بناءً على الرصيد
+            if (isAuthReady) {
+                 spinButton.disabled = starBalance < spinCost;
+                 if (starBalance < spinCost) {
+                    spinButton.textContent = 'الرصيد 0! إضغط للشحن';
+                 } else if (spinButton.textContent.includes('جاري تحليل حظك') === false) {
+                     spinButton.textContent = 'إبدأ الآن بـ 1 ⭐';
+                 }
             }
 
-            const availSpots = newBoard.map((val, i) => val === '' ? i : -1).filter(i => i !== -1);
-            const moves = [];
-
-            for (let i = 0; i < availSpots.length; i++) {
-                const move = {};
-                const index = availSpots[i];
-                move.index = index;
-                newBoard[index] = player;
-
-                const score = this.minimax(newBoard, player === 'O' ? 'X' : 'O').score;
-                move.score = score;
-
-                newBoard[index] = ''; // Reset the spot
-                moves.push(move);
-            }
-
-            let bestMove = 0;
-            if (player === 'O') { // Maximizer
-                let bestScore = -Infinity;
-                for (let i = 0; i < moves.length; i++) {
-                    if (moves[i].score > bestScore) {
-                        bestScore = moves[i].score;
-                        bestMove = i;
-                    }
+            // تحديث سجل الأرباح
+            if (logMessage) {
+                const li = document.createElement('li');
+                li.innerHTML = `<span class="text-sm text-gray-500">${new Date().toLocaleTimeString()}</span>: ${logMessage}`;
+                logList.prepend(li);
+                if (logList.lastElementChild && logList.lastElementChild.classList.contains('italic')) {
+                    logList.removeChild(logList.lastElementChild);
                 }
-            } else { // Minimizer
-                let bestScore = Infinity;
-                for (let i = 0; i < moves.length; i++) {
-                    if (moves[i].score < bestScore) {
-                        bestScore = moves[i].score;
-                        bestMove = i;
-                    }
+                while (logList.children.length > 5) {
+                    logList.removeChild(logList.lastElementChild);
                 }
             }
-
-            return moves[bestMove];
         }
-        
-        getRobotMoveIndex() {
-            const availSpots = this.board.map((val, i) => val === '' ? i : -1).filter(i => i !== -1);
+
+        function showToast(message, type = 'info') {
+            toastElement.innerHTML = `<span class="text-sm">${message}</span>`;
+            toastElement.classList.remove('bg-gray-900', 'bg-red-500', 'bg-green-500');
+
+            let bgColor = 'bg-gray-900';
+            if (type === 'success') bgColor = 'bg-green-500';
+            if (type === 'error') bgColor = 'bg-red-500';
+
+            toastElement.classList.add(bgColor, 'toast-visible', 'opacity-100', 'translate-y-0');
             
-            if (availSpots.length === 0) return -1; 
-            
-            // Simple AI fallback for initial moves to speed up Minimax
-            if (availSpots.length >= 8) {
-                if (this.board[4] === '') return 4; // Take center first
+            setTimeout(() => {
+                toastElement.classList.remove('opacity-100', 'translate-y-0');
+            }, 3000); 
+        }
+
+        function toggleChargeModal(show) {
+            if (show) {
+                chargeModal.classList.remove('hidden');
+                setTimeout(() => {
+                    chargeModal.style.opacity = '1';
+                    modalContent.style.transform = 'scale(1)';
+                }, 10);
+            } else {
+                chargeModal.style.opacity = '0';
+                modalContent.style.transform = 'scale(0.9)';
+                setTimeout(() => {
+                    chargeModal.classList.add('hidden');
+                }, 300);
+            }
+        }
+
+        function setupReels() {
+            reels.forEach(reel => {
+                reel.innerHTML = '';
+                for(let i = 0; i < 30; i++) {
+                    const item = document.createElement('div');
+                    item.className = 'slot-item';
+                    item.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+                    reel.appendChild(item);
+                }
+            });
+        }
+
+        function populateChargeOptions() {
+            chargeOptionsContainer.innerHTML = '';
+            starLinks.forEach(item => {
+                const button = document.createElement('a');
+                const amountFormatted = item.amount.toLocaleString();
+                button.className = 'charge-option bg-green-600 hover:bg-green-700 text-white py-4 rounded-xl font-extrabold text-xl transition shadow-lg text-center block';
+                button.href = item.link;
+                button.target = '_blank'; // يفتح الرابط في علامة تبويب جديدة
+                button.textContent = `${amountFormatted} ⭐`;
                 
-                const corners = [0, 2, 6, 8].filter(i => this.board[i] === '');
-                if (corners.length > 0) return corners[Math.floor(Math.random() * corners.length)];
-            }
+                button.addEventListener('click', () => {
+                    showToast(`✅ تم فتح رابط ${amountFormatted} ⭐. انتظر تأكيد البوت.`);
+                    toggleChargeModal(false);
+                });
 
-            // Use Minimax for critical moves
-            return this.minimax(this.board, 'O').index;
+                chargeOptionsContainer.appendChild(button);
+            });
         }
 
-    }
-    const game = new GameLogic();
-    
-    // -------------------------------------
-    // 5. Data Manager (Firebase & Stats)
-    // -------------------------------------
-    class DataManager {
-        
-        formatDate(timestamp) {
-            if (timestamp === 'N/A' || !timestamp) return 'N/A';
-            try {
-                const date = new Date(timestamp);
-                return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-            } catch (e) {
-                return timestamp;
+        // *** دالة تحديد الرمز الفائز بناءً على الاحتمالات ***
+        function getWinSymbol(winProbability, guarantee777) {
+            const random = Math.random();
+            // نسبة فوز عشوائية ثلاثية (10 لـ 777, 30 لباقي الرموز)
+            const tripleWinChance = 0.1; 
+            
+            if (guarantee777) {
+                 // إذا كانت النسبة 80%، نضمن الـ 777
+                return [winSymbol, winSymbol, winSymbol];
+            } else if (random < winProbability) {
+                // حدث الفوز!
+                if (Math.random() < tripleWinChance) {
+                     // فوز بجائزة كبرى (777) بنسبة 10% من نسبة الفوز الإجمالية
+                    return [winSymbol, winSymbol, winSymbol];
+                } else {
+                    // فوز بثلاثة رموز متطابقة عشوائية أخرى
+                    const randomWinSymbol = symbols[Math.floor(Math.random() * (symbols.length - 1))]; // نستثني 777
+                    return [randomWinSymbol, randomWinSymbol, randomWinSymbol];
+                }
+            } else {
+                // حدث الخسارة: رموز عشوائية مختلفة
+                let results = [];
+                for (let i = 0; i < 3; i++) {
+                     // نضمن أن لا تكون الثلاثة متطابقة في حالة الخسارة
+                     let symbol = symbols[Math.floor(Math.random() * symbols.length)];
+                     // محاولة ضمان عدم التكرار الثلاثي في حالة الخسارة
+                     if (i === 2 && results[0] === results[1] && results[0] === symbol) {
+                         symbol = symbols[(symbols.indexOf(symbol) + 1) % symbols.length];
+                     }
+                     results.push(symbol);
+                }
+                return results;
             }
         }
         
-        async initialize() {
+        async function spinSlot() {
+            if (starBalance < spinCost) {
+                toggleChargeModal(true);
+                return;
+            }
+
+            // 1. حساب نسبة الفوز
+            let winProbability = 0;
+            let guarantee777 = false;
+
+            if (playCount <= 1) { // أول مرة
+                winProbability = 0.8; // 80%
+                guarantee777 = true; // لضمان ظهور 777 لأول مرة
+            } else if (playCount >= 2 && playCount <= 4) { // 3 مشاركات (بالضبط 2 و 3 و 4)
+                winProbability = 0.5; // 50%
+            } else if (playCount >= 5) { // فوق 5 مشاركات
+                // تخمين بين 90% و 35%
+                winProbability = Math.random() < 0.5 ? 0.9 : 0.35; 
+            }
+            
+            // 2. تحديد النتيجة النهائية
+            const finalSymbols = getWinSymbol(winProbability, guarantee777);
+            
+            // 3. خصم التكلفة وتحديث عداد المشاركات
+            starBalance -= spinCost;
+            playCount += 1; // *** زيادة عداد المشاركات ***
+            // لا ننتظر هنا، نرسل التحديث ثم نواصل الحركة لسرعة الاستجابة
+            updateBalanceInDb(starBalance, highScore, playCount); 
+            updateUI(`خصم: ${spinCost} ⭐ للّعب`);
+
+            spinButton.disabled = true;
+            spinButton.textContent = 'جاري تحليل حظك...';
+            messageArea.innerHTML = '<span class="text-yellow-400 font-bold">جاري الفَر... 🎰</span>';
+
+            const finalStopTimes = [];
+
+            reels.forEach((reel, index) => {
+                const resultSymbol = finalSymbols[index];
+                // تأخير التوقف متزايد قليلا
+                const stopTime = 2500 + (index * 700) + Math.random() * 300; 
+                finalStopTimes.push(stopTime);
+
+                // *** الإصلاح هنا: إعادة تعيين Transition وتطبيق حركة الدوران السريع ***
+                reel.style.transition = 'none'; 
+                reel.style.transform = `translateY(0)`; 
+                reel.classList.add('spinning');
+                
+                // تحديد موعد التوقف
+                setTimeout(() => {
+                    reel.classList.remove('spinning');
+                    
+                    // تفعيل الانتقال السلس للحركة النهائية (2 ثانية)
+                    reel.style.transition = 'transform 2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                    
+                    // حساب الإزاحة (نحتاج إلى تحريكه مسافة كبيرة عشوائية + الموقع الفائز)
+                    const symbolsCountForDisplay = 30;
+                    const finalIndex = symbolsCountForDisplay - 2; 
+                    
+                    // نضمن أن الرمز الفائز هو الذي يظهر في المنتصف
+                    reel.children[finalIndex].textContent = resultSymbol;
+                    
+                    // تحريك Reel إلى موضع النهاية
+                    const finalPosition = finalIndex * 120 + 3 * 120; // إضافة 3 مرات ارتفاع البكرة لتأثير الدوران
+                    reel.style.transform = `translateY(-${finalPosition}px)`;
+                }, stopTime);
+            });
+
+            // التحقق من النتيجة بعد توقف البكرة الأخيرة
+            const longestStop = Math.max(...finalStopTimes);
+            setTimeout(() => {
+                checkWin(finalSymbols);
+            }, longestStop + 500); 
+        }
+
+        async function checkWin(results) {
+            spinButton.disabled = false;
+            spinButton.textContent = 'إبدأ الآن بـ 1 ⭐';
+            
+            let win = 0;
+            const isTriple = results[0] === results[1] && results[1] === results[2];
+            const isTriple7 = isTriple && results[0] === winSymbol;
+
+            if (isTriple7) {
+                win = winAmount;
+                starBalance += win;
+                messageArea.innerHTML = `<span class="text-3xl font-black text-yellow-300 animate-pulse">💰 فوز MEGA! +${win} ⭐</span>`;
+                showToast(`🎉 مبروك! فزت بالجائزة الكبرى: ${win} نجمة!`, 'success');
+                updateUI(`فوز كبير: +${win} ⭐`);
+            } else if (isTriple) {
+                win = 10; 
+                starBalance += win;
+                messageArea.innerHTML = `<span class="text-2xl font-bold text-lime-400">✨ فوز ثلاثي! +${win} ⭐</span>`;
+                showToast(`🏆 فوز صغير! تمت إضافة ${win} نجمة.`, 'success');
+                updateUI(`فوز صغير: +${win} ⭐`);
+            } else {
+                messageArea.innerHTML = '<span class="text-red-500 font-bold">😔 لم يحالفك الحظ. جرب ثانية!</span>';
+                showToast('لم تفز هذه المرة. حظ أوفر!');
+                updateUI(`خسارة: -${spinCost} ⭐`);
+            }
+            
+            if (starBalance > highScore) {
+                highScore = starBalance;
+            }
+            // تحديث الرصيد وأعلى نتيجة في Firestore بعد انتهاء الجولة
+            await updateBalanceInDb(starBalance, highScore, playCount);
+        }
+
+        // ------------------------------------------
+        // 6. تهيئة Firebase وتوقيع الدخول
+        // ------------------------------------------
+        async function initFirebase() {
             try {
+                setLogLevel('debug');
                 const app = initializeApp(firebaseConfig);
-                state.db = getFirestore(app);
-                state.auth = getAuth(app);
-                
-                await setPersistence(state.auth, browserLocalPersistence);
+                db = getFirestore(app);
+                auth = getAuth(app);
 
-                onAuthStateChanged(state.auth, async (user) => {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, (user) => {
                     if (user) {
-                        state.userId = user.uid;
-                        // Private user stats doc
-                        state.statsRef = doc(state.db, `/artifacts/${appId}/users/${state.userId}/tictactoe/stats`);
-                        // Public leaderboard collection
-                        state.leaderboardRef = collection(state.db, `/artifacts/${appId}/public/data/leaderboard`);
-                        
-                        this.loadStats();
-                        UIManager.showScreen('menu');
+                        currentUserId = user.uid;
+                        isAuthReady = true;
+                        fetchInitialData();
                     } else {
-                        const customToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-                        if (customToken) {
-                            await signInWithCustomToken(state.auth, customToken);
-                        } else {
-                            // If running outside Canvas, sign in anonymously (creates a new user)
-                            await signInAnonymously(state.auth);
-                        }
+                        console.error("لم يتم تسجيل الدخول بنجاح.");
+                        messageArea.innerHTML = '<span class="text-red-400">فشل في الاتصال بالخادم.</span>';
                     }
                 });
 
             } catch (error) {
-                console.error("Firebase Initialization Error:", error);
-                UIManager.showScreen('menu'); 
+                console.error("خطأ في تهيئة Firebase:", error);
+                messageArea.innerHTML = '<span class="text-red-400">فشل في الاتصال بالخادم.</span>';
             }
         }
 
-        loadStats() {
-            onSnapshot(state.statsRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    state.userStats = docSnap.data();
-                } else {
-                    state.userStats = {
-                        stars: 0, wins: 0, losses: 0, draws: 0, firstGameDate: 'N/A', lastGameDate: 'N/A', userId: state.userId
-                    };
-                }
-                UIManager.updateAccountScreen();
-            }, (error) => {
-                console.error("Firestore Snapshot Error:", error);
-                // Continue application flow even on error
-            });
-        }
+
+        // 7. تهيئة اللعبة عند التحميل
+        window.onload = () => {
+            initFirebase();
+            setupReels();
+            populateChargeOptions();
+        };
         
-        async getLeaderboard() {
-            try {
-                // Get top 10 players based on stars (No orderBy() used to prevent index issues, sort locally)
-                const q = query(state.leaderboardRef);
-                const querySnapshot = await getDocs(q);
-                
-                let leaderboardData = [];
-                querySnapshot.forEach((doc) => {
-                    leaderboardData.push(doc.data());
-                });
-                
-                // 1. Sort locally by stars (descending)
-                leaderboardData.sort((a, b) => b.stars - a.stars);
-                
-                // 2. Take top 10
-                leaderboardData = leaderboardData.slice(0, 10);
-                
-                return leaderboardData;
-            } catch (e) {
-                console.error("Error fetching leaderboard:", e);
-                return [];
-            }
-        }
-
-        async updateStats(result) {
-            const now = new Date().toISOString();
-            const isNewUser = state.userStats.firstGameDate === 'N/A';
-            
-            let starsChange = 0;
-            if (result === 'X') { // User Win: +1 Star
-                starsChange = 1;
-                state.userStats.wins++;
-            } else if (result === 'O') { // Ali Win: -1 Star
-                starsChange = -1;
-                state.userStats.losses++;
-            } else { // Draw: 0 Change
-                state.userStats.draws++;
-            }
-
-            state.userStats.stars = (state.userStats.stars || 0) + starsChange;
-            state.userStats.lastGameDate = now;
-            
-            if (isNewUser) {
-                state.userStats.firstGameDate = now;
-                state.userStats.userId = state.userId; // Store user ID for public ranking
-            }
-
-            try {
-                // 1. Update Private Stats
-                await setDoc(state.statsRef, state.userStats, { merge: true });
-                
-                // 2. Update Public Leaderboard (Document ID is the user's UID for easy lookup)
-                const publicStatsRef = doc(state.leaderboardRef, state.userId);
-                await setDoc(publicStatsRef, {
-                    userId: state.userId, 
-                    stars: state.userStats.stars,
-                    lastPlayed: now,
-                    // Note: We don't store PII like name/username here, just the ID and score.
-                }, { merge: true });
-                
-                UIManager.updateAccountScreen();
-            } catch (e) {
-                console.error("Error updating stats:", e);
-            }
-        }
-    }
-    const dataManager = new DataManager();
-
-
-    // -------------------------------------
-    // 6. UI Manager (Rendering & Events)
-    // -------------------------------------
-    class UIManager {
-        
-        constructor() {
-            this.setupInitialState();
-            this.setupEventListeners();
-        }
-        
-        setupInitialState() {
-            // Set initial language
-            this.setLanguage(state.currentLang);
-            // Generate board structure
-            this.generateBoard();
-        }
-
-        setupEventListeners() {
-            // Main Menu Handlers
-            DOM.startGameBtn.addEventListener('click', () => {
-                game.resetGame();
-                UIManager.startGameUI();
-            });
-            DOM.accountBtn.addEventListener('click', () => UIManager.showScreen('account'));
-            DOM.leaderboardBtn.addEventListener('click', () => UIManager.loadAndShowLeaderboard());
-            
-            // Navigation Handlers
-            DOM.backToMenuBtn.addEventListener('click', () => UIManager.showScreen('menu'));
-            DOM.backToMenuLeaderboardBtn.addEventListener('click', () => UIManager.showScreen('menu'));
-            DOM.endGameBtn.addEventListener('click', () => UIManager.showScreen('menu'));
-
-            // Language Switcher
-            DOM.langSwitchBtn.addEventListener('click', this.toggleLanguage.bind(this));
-        }
-
-        setLanguage(lang) {
-            state.currentLang = lang;
-            localStorage.setItem('appLang', lang);
-            
-            document.documentElement.lang = lang;
-            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-            DOM.langFlagEl.textContent = lang === 'ar' ? '🇮🇶' : '🇺🇸';
-            DOM.langTextEl.textContent = lang === 'ar' ? 'العربية' : 'USA';
-
-            document.querySelectorAll('[data-ar]').forEach(el => {
-                const text = i18n[lang][el.dataset.ar] || (lang === 'ar' ? el.getAttribute('data-ar') : el.getAttribute('data-en'));
-                if (text) {
-                    el.textContent = text;
-                }
-            });
-            
-            this.updateTurnDisplay();
-            this.updateAccountScreen();
-        }
-
-        toggleLanguage() {
-            this.setLanguage(state.currentLang === 'ar' ? 'en' : 'ar');
-        }
-
-        showScreen(screenName) {
-            Object.values(DOM.screens).forEach(el => el.classList.add('hidden'));
-            if (DOM.screens[screenName]) {
-                DOM.screens[screenName].classList.remove('hidden');
-            }
-            if (screenName !== 'game') {
-                this.resetGameEffects();
-            }
-        }
-        
-        startGameUI() {
-            this.showScreen('game');
-            this.updateTurnDisplay();
-            this.resetGameEffects();
-            // Clear board visually
-            for (let i = 0; i < 9; i++) {
-                const cell = document.getElementById(`cell-${i}`);
-                if (cell) {
-                    cell.innerHTML = '';
-                    cell.classList.remove('disabled'); // Ensure all cells are enabled
-                }
-            }
-        }
-        
-        resetGameEffects() {
-            // Remove all game-end effects and overlays
-            game.isGameActive = false;
-            game.isGameOver = false; 
-            DOM.gameBoardContainer.classList.remove('blur-target');
-            DOM.gameControlButtons.classList.remove('blur-target');
-            DOM.gameStatusBar.classList.remove('blur-target');
-            DOM.restartOverlay.classList.add('hidden');
-            DOM.restartOverlay.style.opacity = 0;
-            this.clearWinningLine();
-        }
-
-        updateTurnDisplay() {
-            if (game.currentPlayer === 'X') {
-                DOM.turnDisplay.textContent = i18n[state.currentLang].turn_you;
-            } else if (game.currentPlayer === 'O') {
-                DOM.turnDisplay.textContent = i18n[state.currentLang].turn_ali;
-            }
-            // Add a small pulse effect to the turn display on change
-            DOM.gameStatusBar.style.transform = 'scale(1.05)';
-            setTimeout(() => {
-                DOM.gameStatusBar.style.transform = 'scale(1.0)';
-            }, 100);
-        }
-
-        updateAccountScreen() {
-            const starsEl = document.getElementById('account-stars');
-            
-            starsEl.innerHTML = `${state.userStats.stars} <i class="ph ph-star-fill text-2xl ${state.currentLang === 'ar' ? 'mr-1' : 'ml-1'}"></i>`;
-            
-            starsEl.classList.remove('marker-X', 'marker-O', 'text-gray-400');
-            if (state.userStats.stars > 0) {
-                starsEl.classList.add('marker-X');
-            } else if (state.userStats.stars < 0) {
-                starsEl.classList.add('marker-O');
-            } else {
-                starsEl.classList.add('text-gray-400');
-            }
-            
-            document.getElementById('account-wins').textContent = state.userStats.wins;
-            document.getElementById('account-losses').textContent = state.userStats.losses;
-            document.getElementById('account-draws').textContent = state.userStats.draws;
-            document.getElementById('account-first-game').textContent = dataManager.formatDate(state.userStats.firstGameDate);
-            document.getElementById('account-last-game').textContent = dataManager.formatDate(state.userStats.lastGameDate);
-            
-            // Add user ID to the account screen for debugging/sharing
-            const accountScreenEl = DOM.screens.account;
-            if (!document.getElementById('user-id-display')) {
-                const userIdEl = document.createElement('p');
-                userIdEl.id = 'user-id-display';
-                userIdEl.className = 'text-xs text-gray-500 mt-4 text-center break-all';
-                userIdEl.textContent = `${i18n[state.currentLang].user_id} ${state.userId || '...'}`;
-                accountScreenEl.querySelector('div:first-child').appendChild(userIdEl);
-            } else {
-                document.getElementById('user-id-display').textContent = `${i18n[state.currentLang].user_id} ${state.userId || '...'}`;
-            }
-        }
-        
-        async loadAndShowLeaderboard() {
-            this.showScreen('leaderboard');
-            DOM.leaderboardList.innerHTML = `<p class="text-gray-400 text-center">${i18n[state.currentLang].loading_leaderboard}</p>`;
-            
-            const leaderboard = await dataManager.getLeaderboard();
-            
-            // Clear loading text
-            DOM.leaderboardList.innerHTML = '';
-            
-            if (leaderboard.length === 0) {
-                 DOM.leaderboardList.innerHTML = `<p class="text-gray-400 text-center">${i18n[state.currentLang].loading_leaderboard.replace('جاري تحميل', 'لا توجد')}</p>`;
-                return;
-            }
-
-            let rankHTML = '';
-            let userRankFound = false;
-            
-            leaderboard.forEach((player, index) => {
-                const rank = index + 1;
-                const isCurrentUser = player.userId === state.userId;
-                
-                if (isCurrentUser) {
-                    userRankFound = true;
-                }
-                
-                const rankColor = rank === 1 ? 'text-yellow-400' : rank === 2 ? 'text-gray-400' : rank === 3 ? 'text-amber-600' : 'text-gray-300';
-                const bgColor = isCurrentUser ? 'bg-indigo-900/50 border-indigo-400' : 'bg-[#333] border-[#333]';
-                
-                // Truncate User ID for display (Only show the full ID in the Account screen)
-                const displayId = player.userId.substring(0, 8) + '...';
-
-                rankHTML += `
-                    <div class="flex justify-between items-center p-3 rounded-lg border ${bgColor} transition-all duration-300">
-                        <div class="flex items-center space-x-3 ${state.currentLang === 'ar' ? 'space-x-reverse' : ''}">
-                            <span class="text-xl font-extrabold ${rankColor}">${rank}.</span>
-                            <span class="text-base font-semibold text-white break-all">${isCurrentUser ? (i18n[state.currentLang].your_rank) : displayId}</span>
-                        </div>
-                        <span class="text-xl font-bold flex items-center ${player.stars >= 0 ? 'marker-X' : 'marker-O'}">
-                            ${player.stars} <i class="ph ph-star-fill text-xl ${state.currentLang === 'ar' ? 'mr-1' : 'ml-1'}"></i>
-                        </span>
-                    </div>
-                `;
-            });
-            
-            DOM.leaderboardList.innerHTML = rankHTML;
-            
-            // If the current user is not in the top 10, show their current rank below the list (requires another query, but we will simplify)
-            // To keep the code under the single-file mandate and Firestore limits, we will assume the user sees their own stats separately.
-        }
-
-        // --- Winning Line UI ---
-
-        generateBoard() {
-            DOM.board.innerHTML = ''; 
-            for (let i = 0; i < 9; i++) {
-                const cell = document.createElement('div');
-                cell.id = `cell-${i}`;
-                cell.classList.add('cell');
-                cell.addEventListener('click', () => GameController.handleUserMove(i));
-                DOM.board.appendChild(cell);
-            }
-            
-            // Re-add winningLineEl container 
-            const lineContainer = document.createElement('div');
-            lineContainer.id = 'winning-line';
-            lineContainer.classList.add('absolute', 'inset-0');
-            DOM.board.appendChild(lineContainer);
-            DOM.winningLineEl = document.getElementById('winning-line');
-        }
-
-        drawWinningLine(combo, winner) {
-            const color = winner === 'X' ? WIN_COLOR : LOSE_COLOR;
-            this.clearWinningLine();
-            
-            const boardRect = DOM.board.getBoundingClientRect();
-
-            const centers = combo.map(i => {
-                const cell = document.getElementById(`cell-${i}`);
-                const rect = cell.getBoundingClientRect();
-                return {
-                    x: rect.left + rect.width / 2 - boardRect.left,
-                    y: rect.top + rect.height / 2 - boardRect.top
-                };
-            });
-
-            const start = centers[0];
-            const end = centers[2];
-
-            const dx = end.x - start.x;
-            const dy = end.y - start.y;
-            const length = Math.sqrt(dx * dx + dy * dy) + 20; 
-            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-
-            const line = document.createElement('div');
-            line.classList.add('win-line', 'win-line-active');
-            line.style.cssText = `
-                background-color: ${color};
-                transform: rotate(${angle}deg);
-                width: ${length}px;
-                height: 10px;
-                left: ${start.x}px;
-                top: ${start.y}px;
-                transform-origin: 0% 0%;
-            `;
-            DOM.winningLineEl.appendChild(line);
-            DOM.winningLineEl.style.color = color;
-        }
-        
-        clearWinningLine() {
-            if (DOM.winningLineEl) {
-                DOM.winningLineEl.innerHTML = '';
-                DOM.winningLineEl.style.color = '';
-            }
-        }
-        
-        // --- Game End UI Flow ---
-
-        showToast(title, message, bgColor, borderColor) {
-            DOM.toastTitle.textContent = title;
-            DOM.toastMessage.textContent = message;
-            DOM.resultToast.style.backgroundColor = bgColor;
-            DOM.resultToast.style.borderColor = borderColor;
-            DOM.resultToast.style.display = 'block'; 
-            
-            // Fade in and apply blur effect
-            setTimeout(() => {
-                DOM.resultToast.style.opacity = 1;
-                DOM.gameBoardContainer.classList.add('blur-target');
-                DOM.gameControlButtons.classList.add('blur-target'); 
-                DOM.gameStatusBar.classList.add('blur-target'); 
-                // Disable all cells to prevent further input during game-over
-                document.querySelectorAll('.cell').forEach(cell => cell.classList.add('disabled'));
-            }, 50); 
-
-            // Hide toast and show restart overlay
-            setTimeout(() => {
-                DOM.resultToast.style.opacity = 0;
-                
-                setTimeout(() => {
-                    DOM.resultToast.style.display = 'none';
-                    this.showRestartOverlay(); 
-                }, 300); // Wait for fade-out
-                
-            }, 50 + TOAST_VISIBLE_DURATION_MS);
-        }
-
-        showRestartOverlay() {
-            // Build the buttons inside the overlay
-            DOM.restartOverlay.innerHTML = `
-                <div class="flex flex-col space-y-4 p-8 w-full max-w-xs">
-                    <button id="restart-game-btn" class="game-button w-full px-6 py-3 rounded-xl text-lg font-bold">
-                        <span data-ar="${i18n[state.currentLang].restart_game}" data-en="${i18n.en.restart_game}">${i18n[state.currentLang].restart_game}</span>
-                    </button>
-                    <button id="return-to-menu-btn-overlay" class="game-button w-full px-6 py-3 rounded-xl text-lg font-bold bg-gray-600 border-gray-500 text-white" style="box-shadow: 0 4px #444; border-color: #555;">
-                        <span data-ar="${i18n[state.currentLang].end_game_menu}" data-en="${i18n.en.end_game_menu}">${i18n[state.currentLang].end_game_menu}</span>
-                    </button>
-                </div>
-            `;
-            
-            // Attach listeners to the newly created buttons
-            document.getElementById('restart-game-btn').addEventListener('click', () => {
-                game.resetGame();
-                this.startGameUI();
-            });
-            document.getElementById('return-to-menu-btn-overlay').addEventListener('click', () => this.showScreen('menu'));
-            
-            // Show the overlay and fade in
-            DOM.restartOverlay.classList.remove('hidden');
-            setTimeout(() => {
-                DOM.restartOverlay.style.opacity = 1;
-            }, 50); 
-        }
-    }
-    const UIManager = new UIManager();
-    
-
-    // -------------------------------------
-    // 7. Main Game Controller (Handles Flow)
-    // -------------------------------------
-    class GameController {
-
-        static async handleUserMove(clickedCellIndex) {
-            if (!game.isGameActive || game.board[clickedCellIndex] !== '' || game.isGameOver) return;
-
-            // 1. User Move (X)
-            game.board[clickedCellIndex] = 'X';
-            document.getElementById(`cell-${clickedCellIndex}`).innerHTML = `<span class="marker-X">X</span>`;
-            document.getElementById(`cell-${clickedCellIndex}`).classList.add('disabled'); // Disable clicked cell
-
-            let { winner, combo } = game.checkWin(game.board);
-            if (winner) return this.gameEnd(winner, combo); 
-            
-            game.currentPlayer = 'O';
-            UIManager.updateTurnDisplay();
-            game.isGameActive = false; 
-            
-            // 2. Ali's move after a short delay
-            await new Promise(resolve => setTimeout(resolve, 700)); // Pause for realism
-            this.handleRobotMove();
-        }
-
-        static async handleRobotMove() {
-            if (game.isGameOver) return;
-            
-            const bestSpot = game.getRobotMoveIndex();
-            
-            if (bestSpot === -1) return this.gameEnd('Draw', null); // Should be checked by checkWin, but as safety
-
-            // 1. Ali Move (O)
-            game.board[bestSpot] = 'O';
-            document.getElementById(`cell-${bestSpot}`).innerHTML = `<span class="marker-O">O</span>`;
-            document.getElementById(`cell-${bestSpot}`).classList.add('disabled'); 
-
-            // 2. Check for win
-            let { winner, combo } = game.checkWin(game.board);
-            if (winner) return this.gameEnd(winner, combo); 
-
-            // 3. Continue Game
-            game.currentPlayer = 'X';
-            UIManager.updateTurnDisplay();
-            game.isGameActive = true;
-        }
-
-        static gameEnd(winner, combo) {
-            game.isGameActive = false;
-            game.isGameOver = true;
-            let title, message, bgColor, borderColor;
-            
-            if (combo) {
-                UIManager.drawWinningLine(combo, winner);
-            }
-            
-            if (winner === 'X') {
-                title = i18n[state.currentLang].win_title;
-                message = i18n[state.currentLang].win_message;
-                bgColor = '#006400'; 
-                borderColor = WIN_COLOR; 
-                dataManager.updateStats('X');
-            } else if (winner === 'O') {
-                title = i18n[state.currentLang].lose_title;
-                message = i18n[state.currentLang].lose_message;
-                bgColor = '#8b0000'; 
-                borderColor = LOSE_COLOR; 
-                dataManager.updateStats('O');
-            } else { // Draw
-                title = i18n[state.currentLang].draw_title;
-                message = i18n[state.currentLang].draw_message;
-                bgColor = '#333333'; 
-                borderColor = '#e0e0e0';
-                dataManager.updateStats('Draw');
-            }
-            
-            // Show result toast and start the overlay flow
-            UIManager.showToast(title, message, bgColor, borderColor);
-        }
-    }
-
-    // -------------------------------------
-    // 8. Application Startup
-    // -------------------------------------
-    
-    // Start Firebase connection and load state
-    dataManager.initialize();
-    
-    // Telegram Web App Initialization (Optional but Recommended for better integration)
-    if (typeof window.Telegram !== 'undefined' && window.Telegram.WebApp) {
-        window.Telegram.WebApp.ready();
-        window.Telegram.WebApp.expand();
-        console.log("Telegram Web App initialized.");
-    } else {
-        console.warn("Telegram Web App environment not detected.");
-    }
-
-  </script>
+        // إتاحة الدالة للاستخدام العالمي (مهمة لزر Spin في HTML)
+        window.spinSlot = spinSlot;
+        window.toggleChargeModal = toggleChargeModal;
+    </script>
 </body>
 </html>
-
