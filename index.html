@@ -158,18 +158,28 @@
 
     <script type="module">
         // ------------------------------------------
-        // 1. إعدادات Firebase
+        // 1. إعدادات Firebase - تم ربطها بإعدادات مشروعك
         // ------------------------------------------
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // متغيرات Firebase الإلزامية في بيئة Canvas
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyBfWFFhHJA2OUulk_Jat99k9ycRS3tmZ4g",
+            authDomain: "myewpas.firebaseapp.com",
+            projectId: "myewpas",
+            storageBucket: "myewpas.firebasestorage.app",
+            messagingSenderId: "700233929427",
+            appId: "1:700233929427:web:a2434361728182ae403a26",
+            measurementId: "G-HP82VRQDV3"
+        };
         
+        // استخدام المتغيرات المعرفة يدوياً لتشغيل اللعبة
+        const appId = FIREBASE_CONFIG.appId;
+        const firebaseConfig = FIREBASE_CONFIG;
+        const initialAuthToken = null; 
+
         // مسار بيانات المستخدم في Firestore
         let DB_PATH = '';
         const DB_COLLECTION = 'game_data';
@@ -185,7 +195,7 @@
         // ------------------------------------------
         let starBalance = 0;
         let highScore = 0;
-        let playCount = 0; // *** متغير جديد لعدد المشاركات ***
+        let playCount = 0; 
         const spinCost = 1;
         const winAmount = 25;
         // تم تحديث الرموز إلى إيموجيات آيفون (الأكثر شيوعاً)
@@ -247,12 +257,12 @@
                 const data = docSnap.data();
                 starBalance = data.balance || 0;
                 highScore = data.highScore || 0;
-                playCount = data.playCount || 0; // *** قراءة عدد المشاركات ***
+                playCount = data.playCount || 0;
             } else {
                 await setDoc(userDocRef, { balance: 0, highScore: 0, playCount: 0, created: new Date().toISOString() });
                 starBalance = 0;
                 highScore = 0;
-                playCount = 0; // *** تهيئة عدد المشاركات ***
+                playCount = 0; 
             }
 
             updateUI('تم تحميل البيانات بنجاح.');
@@ -272,7 +282,7 @@
                     const data = docSnap.data();
                     starBalance = data.balance || 0;
                     highScore = data.highScore || 0;
-                    playCount = data.playCount || 0; // *** تحديث عدد المشاركات في الوقت الحقيقي ***
+                    playCount = data.playCount || 0; 
                     
                     if (starBalance > oldBalance && oldBalance !== 0) {
                          const increase = starBalance - oldBalance;
@@ -287,14 +297,14 @@
             });
         }
 
-        async function updateBalanceInDb(newBalance, newHighScore, newPlayCount) { // *** تحديث الدالة لقبول عدد المشاركات ***
+        async function updateBalanceInDb(newBalance, newHighScore, newPlayCount) { 
             if (!isAuthReady || !currentUserId) return;
             const userDocRef = doc(db, setupDbPath(currentUserId));
             try {
                 await setDoc(userDocRef, { 
                     balance: newBalance,
                     highScore: newHighScore,
-                    playCount: newPlayCount, // *** حفظ عدد المشاركات الجديد ***
+                    playCount: newPlayCount, 
                 }, { merge: true });
             } catch (error) {
                 console.error("خطأ في تحديث Firestore:", error);
@@ -398,32 +408,28 @@
             });
         }
 
-        // *** دالة تحديد الرمز الفائز بناءً على الاحتمالات ***
         function getWinSymbol(winProbability, guarantee777) {
             const random = Math.random();
-            // نسبة فوز عشوائية ثلاثية (10 لـ 777, 30 لباقي الرموز)
             const tripleWinChance = 0.1; 
             
             if (guarantee777) {
-                 // إذا كانت النسبة 80%، نضمن الـ 777
+                 // 80% فوز، وضمنها 777
                 return [winSymbol, winSymbol, winSymbol];
             } else if (random < winProbability) {
                 // حدث الفوز!
                 if (Math.random() < tripleWinChance) {
-                     // فوز بجائزة كبرى (777) بنسبة 10% من نسبة الفوز الإجمالية
+                     // فوز بجائزة كبرى (777)
                     return [winSymbol, winSymbol, winSymbol];
                 } else {
                     // فوز بثلاثة رموز متطابقة عشوائية أخرى
-                    const randomWinSymbol = symbols[Math.floor(Math.random() * (symbols.length - 1))]; // نستثني 777
+                    const randomWinSymbol = symbols[Math.floor(Math.random() * (symbols.length - 1))]; 
                     return [randomWinSymbol, randomWinSymbol, randomWinSymbol];
                 }
             } else {
                 // حدث الخسارة: رموز عشوائية مختلفة
                 let results = [];
                 for (let i = 0; i < 3; i++) {
-                     // نضمن أن لا تكون الثلاثة متطابقة في حالة الخسارة
                      let symbol = symbols[Math.floor(Math.random() * symbols.length)];
-                     // محاولة ضمان عدم التكرار الثلاثي في حالة الخسارة
                      if (i === 2 && results[0] === results[1] && results[0] === symbol) {
                          symbol = symbols[(symbols.indexOf(symbol) + 1) % symbols.length];
                      }
@@ -439,14 +445,14 @@
                 return;
             }
 
-            // 1. حساب نسبة الفوز
+            // 1. حساب نسبة الفوز بناءً على عدد المشاركات
             let winProbability = 0;
             let guarantee777 = false;
 
             if (playCount <= 1) { // أول مرة
                 winProbability = 0.8; // 80%
-                guarantee777 = true; // لضمان ظهور 777 لأول مرة
-            } else if (playCount >= 2 && playCount <= 4) { // 3 مشاركات (بالضبط 2 و 3 و 4)
+                guarantee777 = true; // نضمن 777 لأول مرة
+            } else if (playCount >= 2 && playCount <= 4) { // 3 مشاركات (2، 3، 4)
                 winProbability = 0.5; // 50%
             } else if (playCount >= 5) { // فوق 5 مشاركات
                 // تخمين بين 90% و 35%
@@ -458,10 +464,10 @@
             
             // 3. خصم التكلفة وتحديث عداد المشاركات
             starBalance -= spinCost;
-            playCount += 1; // *** زيادة عداد المشاركات ***
+            playCount += 1; 
             // لا ننتظر هنا، نرسل التحديث ثم نواصل الحركة لسرعة الاستجابة
             updateBalanceInDb(starBalance, highScore, playCount); 
-            updateUI(`خصم: ${spinCost} ⭐ للّعب`);
+            updateUI(`خصم: ${spinCost} ⭐ للّعب. حظك الحالي: ${Math.round(winProbability * 100)}%`);
 
             spinButton.disabled = true;
             spinButton.textContent = 'جاري تحليل حظك...';
@@ -471,31 +477,23 @@
 
             reels.forEach((reel, index) => {
                 const resultSymbol = finalSymbols[index];
-                // تأخير التوقف متزايد قليلا
                 const stopTime = 2500 + (index * 700) + Math.random() * 300; 
                 finalStopTimes.push(stopTime);
 
-                // *** الإصلاح هنا: إعادة تعيين Transition وتطبيق حركة الدوران السريع ***
                 reel.style.transition = 'none'; 
                 reel.style.transform = `translateY(0)`; 
                 reel.classList.add('spinning');
                 
-                // تحديد موعد التوقف
                 setTimeout(() => {
                     reel.classList.remove('spinning');
-                    
-                    // تفعيل الانتقال السلس للحركة النهائية (2 ثانية)
                     reel.style.transition = 'transform 2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
                     
-                    // حساب الإزاحة (نحتاج إلى تحريكه مسافة كبيرة عشوائية + الموقع الفائز)
                     const symbolsCountForDisplay = 30;
                     const finalIndex = symbolsCountForDisplay - 2; 
                     
-                    // نضمن أن الرمز الفائز هو الذي يظهر في المنتصف
                     reel.children[finalIndex].textContent = resultSymbol;
                     
-                    // تحريك Reel إلى موضع النهاية
-                    const finalPosition = finalIndex * 120 + 3 * 120; // إضافة 3 مرات ارتفاع البكرة لتأثير الدوران
+                    const finalPosition = finalIndex * 120 + 3 * 120; 
                     reel.style.transform = `translateY(-${finalPosition}px)`;
                 }, stopTime);
             });
@@ -546,15 +544,14 @@
         async function initFirebase() {
             try {
                 setLogLevel('debug');
+                
+                // هنا يتم استخدام الإعدادات الخاصة بك
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
 
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
+                // تسجيل الدخول المجهول
+                await signInAnonymously(auth);
 
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
@@ -563,27 +560,4 @@
                         fetchInitialData();
                     } else {
                         console.error("لم يتم تسجيل الدخول بنجاح.");
-                        messageArea.innerHTML = '<span class="text-red-400">فشل في الاتصال بالخادم.</span>';
-                    }
-                });
-
-            } catch (error) {
-                console.error("خطأ في تهيئة Firebase:", error);
-                messageArea.innerHTML = '<span class="text-red-400">فشل في الاتصال بالخادم.</span>';
-            }
-        }
-
-
-        // 7. تهيئة اللعبة عند التحميل
-        window.onload = () => {
-            initFirebase();
-            setupReels();
-            populateChargeOptions();
-        };
-        
-        // إتاحة الدالة للاستخدام العالمي (مهمة لزر Spin في HTML)
-        window.spinSlot = spinSlot;
-        window.toggleChargeModal = toggleChargeModal;
-    </script>
-</body>
-</html>
+                        messageArea
